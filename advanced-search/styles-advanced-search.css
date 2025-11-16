@@ -381,3 +381,54 @@ button:focus {
     flex: 1;
     max-width: 200px;
 }
+
+@media (max-width: 1024px) {
+    .library-content {
+        flex-direction: column;
+    }
+
+    .filters-sidebar {
+        width: 100%;
+    }
+
+    .books-grid {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .search-form {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .trending-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .trending-header {
+        max-width: 100%;
+    }
+
+    .library-header {
+        flex-direction: column;
+    }
+
+    .main-content {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .trending-title,
+    .library-title {
+        font-size: 1.5rem;
+    }
+}
