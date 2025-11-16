@@ -19,3 +19,28 @@ function initializeFilters() {
         });
     });
 }
+
+function initializeSearch() {
+    const searchForm = document.querySelector('.search-form');
+    const searchInput = document.getElementById('search-input');
+    const dropdownButton = document.querySelector('.dropdown-button');
+    
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                performSearch(searchTerm);
+            }
+        });
+    }
+    
+    // Dropdown functionality (basic - can be expanded)
+    if (dropdownButton) {
+        dropdownButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Could add dropdown menu here
+            console.log('Search category dropdown clicked');
+        });
+    }
+}
