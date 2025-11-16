@@ -94,3 +94,13 @@ function initializeCart() {
 
     updateCartBadge();
 }
+
+const sortSelect = document.getElementById('sort-select');
+if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+        const sortValue = e.target.value;
+        console.log('Sorting by:', sortValue);
+        // This would typically sort the book results
+        // For now, just log the sort value
+    });
+}
