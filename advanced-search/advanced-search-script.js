@@ -1,3 +1,9 @@
+document.addEventListener('DOMContentLoaded', () => {
+    initializeFilters();
+    initializeSearch();
+    initializeCart();
+});
+
 function initializeFilters() {
     const filterHeaders = document.querySelectorAll('.filter-header');
     
