@@ -1,0 +1,11 @@
+.libraryContent {
+  display: flex;
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .libraryContent {
+    flex-direction: column;
+  }
+}
+

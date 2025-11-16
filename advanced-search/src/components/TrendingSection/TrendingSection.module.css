@@ -1,0 +1,48 @@
+.trendingSection {
+  margin-bottom: 3rem;
+}
+
+.trendingContainer {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.trendingHeader {
+  max-width: 300px;
+}
+
+.trendingTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.trendingSubtitle {
+  color: var(--text-light);
+}
+
+.trendingBooksScroll {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .trendingContainer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .trendingHeader {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .trendingTitle {
+    font-size: 1.5rem;
+  }
+}
+

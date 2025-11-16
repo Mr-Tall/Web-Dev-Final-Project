@@ -1,0 +1,19 @@
+.filtersSidebar {
+  flex: 0 0 250px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+.filtersTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .filtersSidebar {
+    width: 100%;
+  }
+}
+
