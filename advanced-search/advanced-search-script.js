@@ -44,3 +44,9 @@ function initializeSearch() {
         });
     }
 }
+
+function performSearch(searchTerm) {
+    console.log('Searching for:', searchTerm);
+    // This would typically filter the book results
+    // For now, just log the search term
+}
