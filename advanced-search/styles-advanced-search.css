@@ -130,7 +130,7 @@ button:focus {
     position: relative;
 }
 
-.cart-badge {
+.cart-count {
     position: absolute;
     top: 0;
     right: 0;
