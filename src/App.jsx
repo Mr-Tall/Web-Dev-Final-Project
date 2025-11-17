@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
+import ResourcesPage from './pages/ResourcesPage'
+import MyLibrary from './pages/MyLibrary'
+import SignIn from './pages/SignIn'
 import './App.css'
 
 function App() {
@@ -10,6 +13,9 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/my-library" element={<MyLibrary />} />
+          <Route path="/sign-in" element={<SignIn />} />
         </Routes>
       </div>
     </Router>
@@ -17,4 +23,3 @@ function App() {
 }
 
 export default App
-
