@@ -1,7 +1,10 @@
+import LOTRimage from "../images/LOTRimage.jpg"
+import hobbit from "../images/hobbit.jpg"
+
 export const book = {
     "title": "The Lord of the Rings",
     "author": "J.R.R. Tolkien",
-    "cover": "LOTRimage.jpg",
+    "cover": LOTRimage,
     "description": "The Lord of the Rings is an epic fantasy novel by J.R.R. Tolkien. It is the first volume of The Hobbit, followed by The Fellowship of the Ring, The Two Towers, and The Return of the King.",
     "releaseDate": "1954-07-29",
     "isbn": "978-0-544-00035-4",
@@ -12,13 +15,37 @@ export const book = {
             "author": "John Doe",
             "rating": 5,
             "upvotes": 10,
-            "comment": "I loved this book!"
+            "comment": "I liked this book."
         },
         {
             "author": "Jane Doe",
             "rating": 4,
+            "upvotes": 20,
+            "comment": "I loved this book!"
+        },
+        {
+            "author": "Liana",
+            "rating": 1,
             "upvotes": 5,
-            "comment": "I liked this book."
+            "comment": "I hated this book."
+        },
+        {
+            "author": "Dylan",
+            "rating": 3,
+            "upvotes": 25,
+            "comment": "This book was alright."
+        },
+        {
+            "author": "Jason",
+            "rating": 2,
+            "upvotes": 15,
+            "comment": "I disiked this book."
+        },
+        {
+            "author": "Omar",
+            "rating": 1,
+            "upvotes": 10,
+            "comment": "I do not recommend this book."
         }
     ],
     "availability": [
@@ -35,5 +62,10 @@ export const book = {
             "type": "Audiobook"
         }
     ],
-    relatedBooks: ["The Hobbit", "The Fellowship of the Ring", "The Two Towers", "The Return of the King"]
+    relatedBooks: [
+        { title: "The Hobbit", image: hobbit },
+        { title: "The Fellowship of the Ring", image: "fellowship.jpg" },
+        { title: "The Two Towers", image: "towers.jpg" },
+        { title: "The Return of the King", image: "return.jpg" }
+      ]          // eventually will make these somehow links to another book obj
 }
