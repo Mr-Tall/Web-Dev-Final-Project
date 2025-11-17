@@ -24,13 +24,6 @@
   transition: all 0.2s ease;
 }
 
-.dropdownButton:hover,
-.dropdownButton:focus {
-  background-color: var(--hover);
-  outline: 2px solid var(--text);
-  outline-offset: -2px;
-}
-
 .arrow {
   font-size: 0.7rem;
   display: inline-block;
@@ -59,12 +52,6 @@
   transition: all 0.2s ease;
 }
 
-.searchButton:hover,
-.searchButton:focus {
-  background-color: var(--hover);
-  outline: 2px solid var(--text);
-  outline-offset: -2px;
-}
 
 @media (max-width: 768px) {
   .searchForm {
