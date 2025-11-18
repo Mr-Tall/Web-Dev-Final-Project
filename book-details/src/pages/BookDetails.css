@@ -1,0 +1,78 @@
+.book-details {
+  display: grid;
+  grid-template-areas:
+    "heading heading"
+    "left right"
+    "related related"; /* related books at the bottom spanning both columns */
+  grid-template-columns: 1fr 1fr;
+  gap: 16px; /* CHANGED: slightly smaller gap between main grid rows */
+  padding: 16px; /* CHANGED: reduced from 20px to shrink space around page */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Heading at top */
+.heading {
+  grid-area: heading;
+  margin-bottom: 4px; /* CHANGED: reduced from 8px */
+  /* NEW: tighten spacing for H1/H2 inside heading */
+  line-height: 1.2;
+}
+
+/* Left column: just the cover image */
+.left-column {
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* CHANGED: reduced gap to tighten cover spacing */
+}
+
+/* Right column: description, tags, rating/review, availability */
+.right-column {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* CHANGED: slightly reduced gap */
+}
+
+/* Related books spans full width */
+.related-section {
+  grid-area: related;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 4px; /* CHANGED: move section up closer to availability */
+}
+
+/* Make images scale naturally */
+.left-column img,
+.right-column img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 800px) {
+  .book-details {
+    grid-template-areas:
+      "heading"
+      "left"
+      "right"
+      "related";
+    grid-template-columns: 1fr;
+  }
+
+  .left-column, .right-column {
+    flex-direction: column;
+  }
+}
+
+.heading h1 {
+  margin-bottom: 2px; /* CHANGED: tighten space below the title */
+}
+
+.heading h2 {
+  margin-top: 5; /* CHANGED: remove default top margin */
+}

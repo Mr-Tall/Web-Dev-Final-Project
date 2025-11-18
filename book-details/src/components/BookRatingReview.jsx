@@ -3,9 +3,9 @@ import Modal from "../components/Modal.jsx";
 import ReviewForm from "../components/ReviewForm.jsx";
 import StarRatingInput from "../components/StarRatingInput.jsx";
 import StarRating from '../components/StarRating.jsx';
+import './BookRatingReview.css'; // CHANGED/ADDED
 
 export default function BookRatingReview({book}) {
-    // modal open/close states
     const [openReview, setOpenReview] = useState(false);
     const [openRate, setOpenRate] = useState(false);
 
@@ -22,35 +22,64 @@ export default function BookRatingReview({book}) {
     };
 
     return (
-        <div>
-            <StarRating rating={averageRating(book.ratings)} />
-            <p>Average from {book.ratings.length} ratings</p>
+        <div className="book-rating-review"> {/* CHANGED */}
 
-            {/* RATE button & modal */}
-            <button onClick={() => setOpenRate(true)}>RATE</button>
-            <Modal open={openRate} onClose={() => setOpenRate(false)}>
-                <h2>Rate this book</h2>
-                <StarRatingInput 
-                    onRate={(n) => {
-                        alert(`You rated this book ${n} stars!`);
-                        setOpenRate(false);
-                    }} 
-                />
-            </Modal>
+            {/* Average Rating */}
+            <div className="row">
+                <StarRating rating={averageRating(book.ratings)} />
+                <span>Average from {book.ratings.length} ratings</span>
+            </div>
 
-            {/* REVIEW button & modal */}
-            <button onClick={() => setOpenReview(true)}>REVIEW</button>
-            <Modal open={openReview} onClose={() => setOpenReview(false)}>
-                <ReviewForm onSubmit={handleSubmitReview} />  
-            </Modal>
+            {/* RATE / REVIEW / SAVE buttons */}
+            <div className="button-row"> {/* NEW */}
+                <button onClick={() => setOpenRate(true)}>RATE</button>
+                <Modal open={openRate} onClose={() => setOpenRate(false)}>
+                    <h2>Rate this book</h2>
+                    <StarRatingInput 
+                        onRate={(n) => {
+                            alert(`You rated this book ${n} stars!`);
+                            setOpenRate(false);
+                        }} 
+                    />
+                </Modal>
 
-            <button onClick={handleSaveClick}>SAVE</button>
+                <button onClick={() => setOpenReview(true)}>REVIEW</button>
+                <Modal open={openReview} onClose={() => setOpenReview(false)}>
+                    <ReviewForm onSubmit={handleSubmitReview} />  
+                </Modal>
 
-            <p><StarRating rating={positive.rating} /> {positive.author}</p>
-            <p>{positive.comment}</p>
-            <p><StarRating rating={negative.rating} /> {negative.author}</p>
-            <p>{negative.comment}</p>
-            <p><a href="#">See all {book.reviews.length} reviews</a></p>
+                <button onClick={handleSaveClick}>SAVE</button>
+            </div> {/* NEW */}
+
+            {/* Positive & Negative Reviews Mini Columns */}
+            <div className="reviews-mini"> {/* NEW */}
+                {positive && (
+                    <div className="review-col">
+                        <div className="review-header">Top Positive Review</div> {/* NEW */}
+                        <div className="row">
+                            <StarRating rating={positive.rating} />
+                            <span>{positive.author}</span>
+                        </div>
+                        <p className="comment">{positive.comment}</p>
+                    </div>
+                )}
+
+                {negative && (
+                    <div className="review-col">
+                        <div className="review-header">Top Negative Review</div> {/* NEW */}
+                        <div className="row">
+                            <StarRating rating={negative.rating} />
+                            <span>{negative.author}</span>
+                        </div>
+                        <p className="comment">{negative.comment}</p>
+                    </div>
+                )}
+            </div> {/* NEW */}
+
+            <div className="see-all">
+                <a href="#">See all {book.reviews.length} reviews</a> {/* CHANGED */}
+            </div>
+
         </div>
     );
 }
