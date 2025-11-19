@@ -25,7 +25,8 @@ function AdvancedSearch() {
       genre: book.genre?.toLowerCase() || 'fiction',
       availability: Math.floor(Math.random() * 5) + 1, // Mock availability
       rating: book.rating,
-      releaseDate: book.releaseDate
+      releaseDate: book.releaseDate,
+      image: book.image
     }))
   }, [])
 
@@ -107,7 +108,6 @@ function AdvancedSearch() {
   return (
     <div className={styles.advancedSearch}>
       <div className={styles.searchHeader}>
-        <h1 className={styles.pageTitle}>Advanced Search</h1>
         <SearchForm onSearch={handleSearch} />
       </div>
       <main className={styles.mainContent}>

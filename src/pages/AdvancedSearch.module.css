@@ -10,14 +10,9 @@
   padding: 2rem;
   border-bottom: 1px solid var(--border);
   background: transparent;
-}
-
-.pageTitle {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--gold);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .mainContent {
@@ -35,10 +30,6 @@
   
   .searchHeader {
     padding: 1rem;
-  }
-  
-  .pageTitle {
-    font-size: 1.5rem;
   }
 }
 

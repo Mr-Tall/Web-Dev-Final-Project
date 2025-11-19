@@ -9,6 +9,17 @@ function BookSection({ title, books }) {
       <div className="books-grid">
         {books.slice(0, 8).map((book, index) => (
           <div key={index} className="book-card-large">
+            {book.image && (
+              <div className="book-card-cover">
+                <img 
+                  src={book.image} 
+                  alt={`${book.title} cover`}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
             <div className="book-card-header">
               <h3 className="book-card-title">{book.title}</h3>
               <div className="book-rating">

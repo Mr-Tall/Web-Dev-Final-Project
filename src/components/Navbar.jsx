@@ -31,6 +31,14 @@ function Navbar() {
         </button>
         <button
           className={`nav-link ${
+            location.pathname === '/book-details' ? 'active' : ''
+          }`}
+          onClick={() => handleNavClick('/book-details')}
+        >
+          Book Details
+        </button>
+        <button
+          className={`nav-link ${
             location.pathname === '/resources' ? 'active' : ''
           }`}
           onClick={() => handleNavClick('/resources')}
