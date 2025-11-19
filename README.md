@@ -9,6 +9,7 @@ AI-powered library catalog frontend with advanced search capabilities.
 - **My Library**: Manage your personal book collection
 - **Resources**: Access additional resources
 - **AI Assistant**: Interactive chatbot for book recommendations
+- **Book Details**: View detailed information about books with reviews and ratings
 
 ## Changes, additions, notes etc
 
@@ -19,6 +20,7 @@ AI-powered library catalog frontend with advanced search capabilities.
 - The chatbot is done with the hovering button feature also agreed upon. Chatbot has no functionality yet.
 - Cards are not clickable yet, and nav bar doesn't have any functionality yet.
 - Advanced search page integrated with filtering capabilities
+- Book details page with reviews and ratings functionality
 
 ## Getting Started
 
