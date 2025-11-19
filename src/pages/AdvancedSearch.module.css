@@ -1,0 +1,35 @@
+.advancedSearch {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--dark-maroon) 0%, var(--maroon) 100%);
+  color: var(--white);
+}
+
+.searchHeader {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mainContent {
+  width: 100%;
+  padding: 2rem;
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 1rem;
+  }
+  
+  .searchHeader {
+    padding: 1rem;
+  }
+}
+

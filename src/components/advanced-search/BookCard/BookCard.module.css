@@ -1,0 +1,97 @@
+.bookCard,
+.bookCardGrid {
+  display: flex;
+  flex-direction: column;
+}
+
+.bookCard {
+  flex: 0 0 180px;
+}
+
+.bookCover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bookCoverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bookCoverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.bookInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bookTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.bookAuthor {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.bookAvailabilityRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.bookAvailability {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.addToCartIcon {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--accent);
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.addToCartIcon:hover {
+  transform: scale(1.2);
+}
+
+.addToCartIcon:active {
+  transform: scale(1);
+}
+

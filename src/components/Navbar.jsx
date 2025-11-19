@@ -6,10 +6,7 @@ function Navbar() {
   const location = useLocation()
 
   const handleNavClick = (path) => {
-    if (path === '/') {
-      navigate(path)
-    }
-    // halted functionality for coming pages
+    navigate(path)
   }
 
   return (
@@ -25,19 +22,41 @@ function Navbar() {
           Home
         </button>
         <button
-          className="nav-link"
+          className={`nav-link ${
+            location.pathname === '/advanced-search' ? 'active' : ''
+          }`}
+          onClick={() => handleNavClick('/advanced-search')}
+        >
+          Advanced Search
+        </button>
+        <button
+          className={`nav-link ${
+            location.pathname === '/book-details' ? 'active' : ''
+          }`}
+          onClick={() => handleNavClick('/book-details')}
+        >
+          Book Details
+        </button>
+        <button
+          className={`nav-link ${
+            location.pathname === '/resources' ? 'active' : ''
+          }`}
           onClick={() => handleNavClick('/resources')}
         >
           Resources
         </button>
         <button
-          className="nav-link"
+          className={`nav-link ${
+            location.pathname === '/my-library' ? 'active' : ''
+          }`}
           onClick={() => handleNavClick('/my-library')}
         >
           My Library
         </button>
         <button
-          className="nav-link"
+          className={`nav-link ${
+            location.pathname === '/sign-in' ? 'active' : ''
+          }`}
           onClick={() => handleNavClick('/sign-in')}
         >
           Sign In

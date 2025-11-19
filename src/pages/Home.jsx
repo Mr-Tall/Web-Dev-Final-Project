@@ -1,12 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import booksData from '../data/books.json'
 import SearchBar from '../components/SearchBar'
 import AIAssistant from '../components/AIAssistant'
 import BookSection from '../components/BookSection'
-import BookSlideshow from '../components/BookSlideshow'
 import './Home.css'
 
 function Home() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [showResults, setShowResults] = useState(false)
@@ -69,7 +70,7 @@ function Home() {
             </div>
             <button
               className="advanced-search-btn"
-              onClick={() => {}}
+              onClick={() => navigate('/advanced-search')}
             >
               Advanced Search
             </button>

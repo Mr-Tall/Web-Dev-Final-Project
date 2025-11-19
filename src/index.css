@@ -14,6 +14,14 @@
   --off-white: #F5F5F5;
   --dark-gray: #2C2C2C;
   --gray: #4A4A4A;
+  
+  /* Advanced search component variables - mapped to maroon/gold theme */
+  --text: var(--white);
+  --text-light: var(--off-white);
+  --border: rgba(255, 255, 255, 0.2);
+  --bg: var(--dark-maroon);
+  --accent: var(--gold);
+  --hover: rgba(255, 255, 255, 0.1);
 }
 
 body {
