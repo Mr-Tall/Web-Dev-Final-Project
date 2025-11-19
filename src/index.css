@@ -15,13 +15,13 @@
   --dark-gray: #2C2C2C;
   --gray: #4A4A4A;
   
-  /* Advanced search component variables */
-  --text: #333;
-  --text-light: #666;
-  --border: #e0e0e0;
-  --bg: #fff;
-  --accent: #ff8c00;
-  --hover: #f5f5f5;
+  /* Advanced search component variables - mapped to maroon/gold theme */
+  --text: var(--white);
+  --text-light: var(--off-white);
+  --border: rgba(255, 255, 255, 0.2);
+  --bg: var(--dark-maroon);
+  --accent: var(--gold);
+  --hover: rgba(255, 255, 255, 0.1);
 }
 
 body {

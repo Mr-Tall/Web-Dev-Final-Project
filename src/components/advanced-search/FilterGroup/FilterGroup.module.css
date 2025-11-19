@@ -21,13 +21,15 @@
   justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
+  color: var(--white);
 }
 
 .filterHeader:hover,
 .filterHeader:focus {
   background-color: var(--hover);
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--gold);
   outline-offset: -2px;
+  border-radius: 4px;
 }
 
 .filterArrow {
@@ -53,6 +55,7 @@
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
+  color: var(--white);
 }
 
 .filterCheckbox input[type="checkbox"] {
