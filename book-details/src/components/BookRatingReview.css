@@ -1,0 +1,44 @@
+.book-rating-review {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Row: stars + text on same line */
+.book-rating-review .row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.book-rating-review .button-row {
+    display: flex;
+    gap: 8px;
+}
+
+/* Mini positive/negative review columns */
+.book-rating-review .reviews-mini {
+    display: flex;
+    gap: 16px;
+}
+
+.book-rating-review .review-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.book-rating-review .review-header {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.book-rating-review .comment {
+    margin: 0;
+}
+
+.book-rating-review .see-all {
+    text-align: center;
+    margin-top: 4px;
+}
