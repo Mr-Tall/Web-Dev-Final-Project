@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import booksData from '../data/books.json'
 import SearchBar from '../components/SearchBar'
@@ -12,18 +12,21 @@ function Home() {
   const [searchResults, setSearchResults] = useState([])
   const [showResults, setShowResults] = useState(false)
 
+  // Memoize sorted book arrays to avoid re-sorting on every render
+  const newReleases = useMemo(() => 
+    [...booksData].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate)),
+    []
+  )
 
-  // recently added books
-  const newReleases = [...booksData]
-    .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+  const trendingBooks = useMemo(() => 
+    [...booksData].sort((a, b) => b.rating - a.rating),
+    []
+  )
 
-  // trending books
-  const trendingBooks = [...booksData]
-    .sort((a, b) => b.rating - a.rating)
-
-  // personal recs
-  const recommendations = [...booksData]
-    .sort((a, b) => b.rating - a.rating)
+  const recommendations = useMemo(() => 
+    [...booksData].sort((a, b) => b.rating - a.rating),
+    []
+  )
 
   // handle search
   const handleSearch = (query) => {

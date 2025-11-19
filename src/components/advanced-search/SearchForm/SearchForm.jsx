@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import styles from './SearchForm.module.css'
 
 const SearchForm = ({ onSearch }) => {
@@ -13,8 +13,7 @@ const SearchForm = ({ onSearch }) => {
 
   const handleDropdownClick = (e) => {
     e.stopPropagation()
-    // Could add dropdown menu here
-    console.log('Search category dropdown clicked')
+    // TODO: Implement dropdown menu functionality
   }
 
   return (

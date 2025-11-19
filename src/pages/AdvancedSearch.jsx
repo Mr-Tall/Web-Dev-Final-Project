@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import booksData from '../data/books.json'
 import TrendingSection from '../components/advanced-search/TrendingSection/TrendingSection'
 import LibrarySection from '../components/advanced-search/LibrarySection/LibrarySection'
@@ -6,7 +6,6 @@ import SearchForm from '../components/advanced-search/SearchForm/SearchForm'
 import styles from './AdvancedSearch.module.css'
 
 function AdvancedSearch() {
-  const [cartCount, setCartCount] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     category: [],
@@ -16,18 +15,25 @@ function AdvancedSearch() {
   })
 
   // Map books data to include availability and normalize genre
+  // Using a seed-based approach for consistent availability values
   const allBooks = useMemo(() => {
-    return booksData.map((book, index) => ({
-      id: index + 1,
-      title: book.title,
-      author: book.author,
-      isbn: book.isbn,
-      genre: book.genre?.toLowerCase() || 'fiction',
-      availability: Math.floor(Math.random() * 5) + 1, // Mock availability
-      rating: book.rating,
-      releaseDate: book.releaseDate,
-      image: book.image
-    }))
+    return booksData.map((book, index) => {
+      // Generate consistent availability based on index (not random)
+      const seed = index * 7 + 3
+      const availability = (seed % 5) + 1
+      
+      return {
+        id: index + 1,
+        title: book.title,
+        author: book.author,
+        isbn: book.isbn,
+        genre: book.genre?.toLowerCase() || 'fiction',
+        availability, // Consistent mock availability
+        rating: book.rating,
+        releaseDate: book.releaseDate,
+        image: book.image
+      }
+    })
   }, [])
 
   const handleSearch = useCallback((term) => {
@@ -35,8 +41,8 @@ function AdvancedSearch() {
   }, [])
 
   const handleAddToCart = useCallback((book) => {
-    setCartCount(prev => prev + 1)
-    console.log('Added to cart:', book)
+    // TODO: Implement cart functionality
+    // This would typically add the book to a cart state/API
   }, [])
 
   const handleFilterChange = useCallback((filterGroup, value, checked) => {

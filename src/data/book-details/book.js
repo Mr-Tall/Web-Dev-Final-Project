@@ -1,8 +1,9 @@
-import LOTR from "../../images/book-details/LOTR.jpg"
-import hobbit from "../../images/book-details/hobbit.jpg"
-import fellowship from "../../images/book-details/fellowship.jpg"
-import towers from "../../images/book-details/towers.jpg"
-import king from "../../images/book-details/king.jpg"
+// Using public image paths for better performance and consistency
+const LOTR = "/images/books/LOTR.jpg"
+const hobbit = "/images/books/hobbit.jpg"
+const fellowship = "/images/books/fellowship.jpg"
+const towers = "/images/books/towers.jpg"
+const king = "/images/books/king.jpg"
 
 export const book = {
     "title": "The Lord of the Rings",
