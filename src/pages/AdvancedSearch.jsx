@@ -6,7 +6,6 @@ import SearchForm from '../components/advanced-search/SearchForm/SearchForm'
 import styles from './AdvancedSearch.module.css'
 
 function AdvancedSearch() {
-  const [cartCount, setCartCount] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     category: [],
@@ -32,11 +31,19 @@ function AdvancedSearch() {
 
   const handleSearch = useCallback((term) => {
     setSearchTerm(term)
+    // Reset filters when search is cleared
+    if (!term || term.trim() === '') {
+      setFilters({
+        category: [],
+        languages: [],
+        age: [],
+        availability: []
+      })
+    }
   }, [])
 
   const handleAddToCart = useCallback((book) => {
-    setCartCount(prev => prev + 1)
-    console.log('Added to cart:', book)
+    // Add to cart functionality - placeholder for future implementation
   }, [])
 
   const handleFilterChange = useCallback((filterGroup, value, checked) => {
@@ -111,7 +118,9 @@ function AdvancedSearch() {
         <SearchForm onSearch={handleSearch} />
       </div>
       <main className={styles.mainContent}>
-        <TrendingSection books={trendingBooks} onAddToCart={handleAddToCart} />
+        {!searchTerm.trim() && (
+          <TrendingSection books={trendingBooks} onAddToCart={handleAddToCart} />
+        )}
         <LibrarySection 
           books={filteredBooks}
           filters={filters}

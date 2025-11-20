@@ -12,7 +12,6 @@ function Home() {
   const [searchResults, setSearchResults] = useState([])
   const [showResults, setShowResults] = useState(false)
 
-
   // recently added books
   const newReleases = [...booksData]
     .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))

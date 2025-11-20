@@ -34,17 +34,16 @@ function SearchBar({ value, onChange, results, showResults, onResultClick }) {
 
   return (
     <div className="search-bar-container">
-      <div className="search-bar-wrapper" ref={searchRef}>
+      <div className="search-form" ref={searchRef}>
         <input
           type="text"
           id="main-search-bar"
           className="search-input"
-          placeholder="Search by title, author, or ISBN..."
+          placeholder="Search books by title, author, publisher, ..."
           value={value}
           onChange={handleInputChange}
           onFocus={() => setIsFocused(true)}
         />
-        <span className="search-icon">🔍</span>
       </div>
       {showResults && results.length > 0 && isFocused && (
         <div className="search-results" ref={resultsRef}>
