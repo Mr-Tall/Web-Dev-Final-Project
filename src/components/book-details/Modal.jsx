@@ -25,6 +25,7 @@ const styles = {
     },
     modal: {
         background: "white",
+        color: "#000000",
         padding: "20px",
         borderRadius: "8px",
         minWidth: "300px",
@@ -36,6 +37,7 @@ const styles = {
         background: "none",
         fontSize: "18px",
         cursor: "pointer",
+        color: "#000000",
     }
 };
 
