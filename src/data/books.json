@@ -6,7 +6,7 @@
     "isbn": "978-0-7432-7356-5",
     "rating": 4.5,
     "genre": "Fiction",
-    "image": "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg"
+    "image": "/images/books/gatsby.svg"
   },
   {
     "title": "To Kill a Mockingbird",
@@ -15,7 +15,7 @@
     "isbn": "978-0-06-112008-4",
     "rating": 4.8,
     "genre": "Fiction",
-    "image": "https://covers.openlibrary.org/b/isbn/9780061120084-L.jpg"
+    "image": "/images/books/mockingbird.svg"
   },
   {
     "title": "1984",
@@ -24,7 +24,7 @@
     "isbn": "978-0-452-28423-4",
     "rating": 4.7,
     "genre": "Dystopian",
-    "image": "https://covers.openlibrary.org/b/isbn/9780452284234-L.jpg"
+    "image": "/images/books/1984.svg"
   },
   {
     "title": "The Lord of the Rings",
@@ -42,7 +42,7 @@
     "isbn": "978-0-14-143951-8",
     "rating": 4.6,
     "genre": "Romance",
-    "image": "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg"
+    "image": "/images/books/pride.svg"
   },
   {
     "title": "The Hobbit",

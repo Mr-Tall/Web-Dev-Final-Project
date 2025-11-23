@@ -1,14 +1,26 @@
+import { useNavigate } from 'react-router-dom'
 import './BookSection.css'
 
 function BookSection({ title, books }) {
+  const navigate = useNavigate()
+
   if (books.length === 0) return null
+
+  const handleBookClick = (book) => {
+    navigate(`/book/isbn/${book.isbn}`)
+  }
 
   return (
     <section className="book-section">
       <h2 className="section-title">{title}</h2>
       <div className="books-grid">
         {books.slice(0, 8).map((book, index) => (
-          <div key={index} className="book-card-large">
+          <div 
+            key={index} 
+            className="book-card-large"
+            onClick={() => handleBookClick(book)}
+            style={{ cursor: 'pointer' }}
+          >
             {book.image && (
               <div className="book-card-cover">
                 <img 

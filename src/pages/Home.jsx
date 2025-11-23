@@ -1,15 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import booksData from '../data/books.json'
-import SearchBar from '../components/SearchBar'
 import AIAssistant from '../components/AIAssistant'
+import SearchForm from '../components/advanced-search/SearchForm/SearchForm'
 import './Home.css'
 
 function Home() {
   const navigate = useNavigate()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [showResults, setShowResults] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  // Handle search
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term)
+    if (term && term.trim() !== '') {
+      navigate('/advanced-search')
+    }
+  }, [navigate])
 
   // Memoize sorted book arrays
   const newReleases = useMemo(() => 
@@ -22,46 +28,18 @@ function Home() {
     []
   )
 
-  const recommendations = useMemo(() => 
-    [...booksData].sort((a, b) => b.rating - a.rating),
-    []
-  )
 
-  // Handle search
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-    if (query.trim() === '') {
-      setSearchResults([])
-      setShowResults(false)
-      return
-    }
 
-    const results = booksData.filter(book => {
-      const lowerQuery = query.toLowerCase()
-      return (
-        book.title.toLowerCase().includes(lowerQuery) ||
-        book.author.toLowerCase().includes(lowerQuery) ||
-        book.isbn.includes(query)
-      )
-    }).slice(0, 5)
-
-    setSearchResults(results)
-    setShowResults(true)
-  }
-
-  // Featured resources preview
-  const featuredResources = [
-    {
-      title: 'Research Essentials Workshop',
-      date: 'Oct 25, 2025',
-      excerpt: 'Learn how to navigate the library catalog and use subject databases...'
-    },
-    {
-      title: 'One-on-One Research Consultation',
-      date: 'By appointment',
-      excerpt: 'Book a 30-minute session with a librarian for personalized help...'
-    }
-  ]
+  // Generate mock review counts for books (similar to critic/user scores)
+  const booksWithScores = useMemo(() => {
+    return newReleases.map(book => ({
+      ...book,
+      criticScore: Math.floor(book.rating * 20), // Convert 5-star to 100 scale
+      criticCount: Math.floor(Math.random() * 15) + 5,
+      userScore: Math.floor(book.rating * 20) + Math.floor(Math.random() * 10) - 5,
+      userCount: Math.floor(Math.random() * 500) + 50
+    }))
+  }, [newReleases])
 
   return (
     <div className="home">
@@ -69,163 +47,678 @@ function Home() {
         {/* AI Floating Button */}
         <AIAssistant />
 
-        {/* Search Section */}
-        <section className="search-section">
-          <div className="search-wrapper">
-            <div className="search-bar-container">
-              <SearchBar
-                value={searchQuery}
-                onChange={handleSearch}
-                results={searchResults}
-                showResults={showResults}
-                onResultClick={(book) => {
-                  setShowResults(false)
-                  setSearchQuery('')
-                }}
-              />
-            </div>
-            <button
-              className="advanced-search-btn"
-              onClick={() => navigate('/advanced-search')}
-            >
-              Advanced Search
-            </button>
-          </div>
+        {/* Search Bar Section */}
+        <section className="home-search-section">
+          <SearchForm onSearch={handleSearch} />
         </section>
 
-        {/* Two Column Layout: Currently Reading & News */}
-        <section className="two-column-section">
-          {/* Left: Currently Reading / Featured Books */}
-          <div className="column-left">
-            <div className="section-card">
-              <div className="section-header">
-                <h2 className="section-title">Currently Trending</h2>
-                <p className="section-subtitle">Top-rated books our community is reading</p>
-              </div>
-              <div className="featured-books-list">
-                {trendingBooks.slice(0, 2).map((book, index) => (
-                  <div key={book.isbn || index} className="featured-book-item">
-                    {book.image && (
-                      <div className="featured-book-cover">
-                        <img src={book.image} alt={book.title} />
-                      </div>
-                    )}
-                    <div className="featured-book-info">
-                      <h3 className="featured-book-title">{book.title}</h3>
-                      <p className="featured-book-author">by {book.author}</p>
-                      <div className="featured-book-rating">
-                        <span className="rating-stars">★★★★★</span>
-                        <span className="rating-value">{book.rating.toFixed(1)}</span>
-                      </div>
-                      <button 
-                        className="featured-book-btn"
-                        onClick={() => navigate('/book-details')}
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* NEW RELEASES Section - AOTY Style */}
+        <section className="new-releases-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">NEW RELEASES</h2>
+            <div className="section-header-links">
+              <button className="header-link active">BOOKS</button>
+              <button className="header-link" onClick={() => navigate('/advanced-search')}>
+                VIEW ALL
+              </button>
             </div>
           </div>
-
-          {/* Right: News & Highlights */}
-          <div className="column-right">
-            <div className="section-card">
-              <div className="section-header">
-                <h2 className="section-title">News & Highlights</h2>
-                <p className="section-subtitle">What's happening in our library</p>
-              </div>
-              <div className="news-list">
-                {featuredResources.map((resource, index) => (
-                  <article key={index} className="news-item">
-                    <div className="news-date">{resource.date}</div>
-                    <h3 className="news-title">{resource.title}</h3>
-                    <p className="news-excerpt">{resource.excerpt}</p>
-                    <button 
-                      className="news-link"
-                      onClick={() => navigate('/resources')}
-                    >
-                      Read more →
-                    </button>
-                  </article>
-                ))}
-                <button 
-                  className="view-all-btn"
-                  onClick={() => navigate('/resources')}
-                >
-                  View All Resources
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Reading Challenge / Stats Section */}
-        <section className="challenge-section">
-          <div className="section-card challenge-card">
-            <div className="challenge-content">
-              <div className="challenge-text">
-                <h2 className="section-title">Your Reading Journey</h2>
-                <p className="challenge-stats">You have explored <strong>{booksData.length}</strong> books in our collection</p>
-                <p className="challenge-subtitle">Continue discovering new worlds and stories</p>
-                <button 
-                  className="challenge-btn"
-                  onClick={() => navigate('/my-library')}
-                >
-                  View My Library
-                </button>
-              </div>
-              <div className="challenge-visual">
-                {trendingBooks[0] && (
-                  <div className="challenge-book">
-                    {trendingBooks[0].image && (
-                      <img src={trendingBooks[0].image} alt={trendingBooks[0].title} />
-                    )}
-                    <div className="challenge-book-info">
-                      <p className="challenge-book-title">{trendingBooks[0].title}</p>
-                      <p className="challenge-book-author">{trendingBooks[0].author}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Want to Read / Recommendations Carousel */}
-        <section className="recommendations-section">
-          <div className="section-card">
-            <div className="section-header">
-              <h2 className="section-title">Recommended for You</h2>
-              <p className="section-subtitle">Find your next great read!</p>
-            </div>
-            <div className="books-carousel">
-              {recommendations.slice(0, 6).map((book, index) => (
-                <div 
-                  key={book.isbn || index} 
-                  className="carousel-book"
-                  onClick={() => navigate('/book-details')}
-                >
-                  {book.image && (
-                    <div className="carousel-book-cover">
-                      <img src={book.image} alt={book.title} />
+          <div className="books-grid-aoty">
+            {booksWithScores.slice(0, 14).map((book, index) => (
+              <div 
+                key={book.isbn || index} 
+                className="book-card-aoty"
+                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+              >
+                <div className="book-cover-aoty">
+                  {book.image ? (
+                    <img src={book.image} alt={book.title} />
+                  ) : (
+                    <div className="book-cover-placeholder-aoty">
+                      <span>{book.title.charAt(0)}</span>
                     </div>
                   )}
-                  <div className="carousel-book-title">{book.title}</div>
-                  <div className="carousel-book-author">{book.author}</div>
+                  {index < 3 && (
+                    <div className="book-star-badge">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff8c00" stroke="#ff8c00">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="book-info-aoty">
+                  <p className="book-artist-aoty">{book.author}</p>
+                  <h3 className="book-title-aoty">{book.title}</h3>
+                  <div className="book-scores-aoty">
+                    <div className="score-line">
+                      <span className="score-value">{book.criticScore}</span>
+                      <span className="score-label">critic score ({book.criticCount})</span>
+                    </div>
+                    <div className="score-line">
+                      <span className="score-value">{book.userScore}</span>
+                      <span className="score-label">user score ({book.userCount.toLocaleString()})</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* NEWSWORTHY Section */}
+        <section className="newsworthy-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">NEWSWORTHY</h2>
+            <button className="header-link" onClick={() => navigate('/resources')}>
+              VIEW ALL
+            </button>
+          </div>
+          <div className="newsworthy-grid">
+            {[
+              {
+                image: '/images/books/gatsby.svg',
+                source: 'library.edu',
+                title: 'New Research Workshop: Navigating Digital Archives and Special Collections',
+                likes: 124,
+                comments: 23
+              },
+              {
+                image: '/images/books/mockingbird.svg',
+                source: 'library.edu',
+                title: 'Author Spotlight: Celebrating Classic Literature in Our Collection',
+                likes: 89,
+                comments: 15
+              },
+              {
+                image: '/images/books/1984.svg',
+                source: 'library.edu',
+                title: 'New Digital Resources: Access Thousands of E-Books Online',
+                likes: 156,
+                comments: 31
+              },
+              {
+                image: '/images/books/LOTR.jpg',
+                source: 'library.edu',
+                title: 'Book Club Meeting: Join Our Monthly Fantasy Literature Discussion',
+                likes: 67,
+                comments: 12
+              },
+              {
+                image: '/images/books/pride.svg',
+                source: 'library.edu',
+                title: 'Library Hours Extended: Now Open Until 10 PM on Weekdays',
+                likes: 203,
+                comments: 45
+              },
+              {
+                image: '/images/books/hobbit.jpg',
+                source: 'library.edu',
+                title: 'New Acquisitions: Latest Bestsellers Now Available for Checkout',
+                likes: 178,
+                comments: 28
+              }
+            ].map((item, index) => (
+              <article 
+                key={index} 
+                className="newsworthy-card"
+                onClick={() => navigate('/resources')}
+              >
+                <div className="newsworthy-image">
+                  <img src={item.image} alt={item.title} />
+                </div>
+                <div className="newsworthy-content">
+                  <p className="newsworthy-source">{item.source}</p>
+                  <h3 className="newsworthy-title">{item.title}</h3>
+                  <div className="newsworthy-stats">
+                    <span className="stat-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                      {item.likes}
+                    </span>
+                    <span className="stat-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                      {item.comments}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="browse-by-section">
+            <h3 className="browse-by-title">BROWSE BY</h3>
+            <div className="browse-by-buttons">
+              <button className="browse-btn" onClick={() => navigate('/advanced-search')}>Decade</button>
+              <button className="browse-btn" onClick={() => navigate('/advanced-search')}>Year</button>
+              <button className="browse-btn" onClick={() => navigate('/advanced-search')}>Month</button>
+              <button className="browse-btn" onClick={() => navigate('/advanced-search')}>Week</button>
+            </div>
+          </div>
+        </section>
+
+        {/* HIGHLY ANTICIPATED Section with Sidebar */}
+        <section className="anticipated-section">
+          <div className="anticipated-main">
+            <div className="section-header-aoty">
+              <h2 className="section-title-aoty">HIGHLY ANTICIPATED BOOKS</h2>
+              <button className="header-link" onClick={() => navigate('/advanced-search')}>
+                VIEW ALL
+              </button>
+            </div>
+            <div className="anticipated-grid">
+              {trendingBooks.slice(0, 6).map((book, index) => {
+                const releaseDate = new Date(book.releaseDate)
+                const formattedDate = releaseDate.toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })
+                const comments = Math.floor(Math.random() * 500) + 50
+                const views = Math.floor(Math.random() * 2000) + 200
+                
+                return (
+                  <div 
+                    key={book.isbn || index} 
+                    className="anticipated-card"
+                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                  >
+                    <div className="anticipated-cover">
+                      {book.image ? (
+                        <img src={book.image} alt={book.title} />
+                      ) : (
+                        <div className="anticipated-placeholder">
+                          <span>{book.title.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="anticipated-info">
+                      <p className="anticipated-author">{book.author}</p>
+                      <h3 className="anticipated-title">{book.title}</h3>
+                      <p className="anticipated-date">{formattedDate}</p>
+                      <div className="anticipated-stats">
+                        <span className="stat-item">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                          </svg>
+                          {comments}
+                        </span>
+                        <span className="stat-item">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                          {views}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="anticipated-sidebar">
+            <div className="sidebar-list">
+              <h3 className="sidebar-title">CRITICS' BEST</h3>
+              {trendingBooks.slice(0, 5).map((book, index) => (
+                <div 
+                  key={book.isbn || index} 
+                  className="sidebar-item"
+                  onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                >
+                  <div className="sidebar-image">
+                    {book.image ? (
+                      <img src={book.image} alt={book.title} />
+                    ) : (
+                      <div className="sidebar-placeholder">
+                        <span>{book.title.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="sidebar-content">
+                    <p className="sidebar-artist">{book.author}</p>
+                    <p className="sidebar-album">{book.title}</p>
+                  </div>
+                  <div className="sidebar-rating">{Math.floor(book.rating * 20)}</div>
                 </div>
               ))}
             </div>
-            <button 
-              className="view-all-btn"
-              onClick={() => navigate('/advanced-search')}
-            >
-              Browse All Books
-            </button>
+
+            <div className="sidebar-list">
+              <h3 className="sidebar-title">USERS' BEST</h3>
+              {trendingBooks.slice(0, 5).map((book, index) => {
+                const userRating = Math.floor(book.rating * 20) + Math.floor(Math.random() * 5) - 2
+                return (
+                  <div 
+                    key={book.isbn || index} 
+                    className="sidebar-item"
+                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                  >
+                    <div className="sidebar-image">
+                      {book.image ? (
+                        <img src={book.image} alt={book.title} />
+                      ) : (
+                        <div className="sidebar-placeholder">
+                          <span>{book.title.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="sidebar-content">
+                      <p className="sidebar-artist">{book.author}</p>
+                      <p className="sidebar-album">{book.title}</p>
+                    </div>
+                    <div className="sidebar-rating">{Math.max(0, Math.min(100, userRating))}</div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </section>
+
+        {/* POPULAR NOW Section */}
+        <section className="popular-now-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">POPULAR NOW</h2>
+            <div className="section-header-links">
+              <button className="header-link active">BOOKS</button>
+              <button className="header-link" onClick={() => navigate('/advanced-search')}>
+                VIEW MORE
+              </button>
+            </div>
+          </div>
+          <div className="popular-scroll">
+            {trendingBooks.slice(0, 10).map((book, index) => (
+              <div 
+                key={book.isbn || index} 
+                className="popular-card"
+                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+              >
+                <div className="popular-cover">
+                  {book.image ? (
+                    <img src={book.image} alt={book.title} />
+                  ) : (
+                    <div className="popular-placeholder">
+                      <span>{book.title.charAt(0)}</span>
+                    </div>
+                  )}
+                  {index < 2 && (
+                    <div className="popular-star-badge">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff8c00" stroke="#ff8c00">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* POPULAR USER REVIEWS Section */}
+        <section className="user-reviews-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">POPULAR USER REVIEWS</h2>
+            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              VIEW MORE
+            </button>
+          </div>
+          <div className="reviews-scroll">
+            {[
+              {
+                book: booksData[0],
+                reviewer: 'BookLover42',
+                rating: 95,
+                review: 'One day I\'m gonna tell my grandkids that I was alive when this masterpiece was published and they weren\'t. This book captures the essence of its era so perfectly. The prose is absolutely stunning, and the characters feel so real. It\'s hard to believe this was written so long ago - it feels timeless. The author just can\'t seem to miss with their storytelling. These themes, with their depth and complexity... read more',
+                likes: 358,
+                comments: 29
+              },
+              {
+                book: booksData[1],
+                reviewer: 'LiteraryFan',
+                rating: 100,
+                review: '"Oh yeah we\'re incredible at this genre too" - this author, probably. Accept it or not, this is one of the most astonishing and original works to come out of this period. You don\'t have to even like the style to know that it is at this point in literary history that their creative genius was overflowing beyond what seemed "imaginable." And although we aren\'t getting a sequel, what they have given us is more than we even deserve... read more',
+                likes: 244,
+                comments: 4
+              },
+              {
+                book: booksData[2],
+                reviewer: 'ClassicReader',
+                rating: 90,
+                review: 'AOTY GPT Please generate me a review for this classic novel that will get a lot of likes. BZZT- BZZT- GENERATING. ADDING LITERARY ANALYSIS. BZZT- BZZT- ADDING CULTURAL REFERENCE. BZZT- BZZT- YOUR REVIEW IS: "Scaring the traditionalists." This book broke boundaries and continues to resonate with readers today. The social commentary is sharp, the narrative is compelling, and the impact is undeniable.',
+                likes: 1783,
+                comments: 93
+              }
+            ].map((review, index) => (
+              <div key={index} className="review-card">
+                <div className="review-cover">
+                  {review.book.image ? (
+                    <img src={review.book.image} alt={review.book.title} />
+                  ) : (
+                    <div className="review-placeholder">
+                      <span>{review.book.title.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="review-content">
+                  <div className="review-header">
+                    <div className="review-rating-section">
+                      <div className="review-rating-bar">
+                        <div 
+                          className="review-rating-fill" 
+                          style={{ width: `${review.rating}%` }}
+                        ></div>
+                        <div className="review-rating-checkmark">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a745" strokeWidth="3">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <span className="review-rating-value">{review.rating}</span>
+                    </div>
+                    {review.reviewer && (
+                      <span className="review-reviewer">{review.reviewer}</span>
+                    )}
+                  </div>
+                  <p className="review-text">{review.review}</p>
+                  <div className="review-stats">
+                    <span className="stat-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                      {review.likes}
+                    </span>
+                    <span className="stat-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                      </svg>
+                      {review.comments}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* UNDER THE RADAR Section */}
+        <section className="under-radar-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">UNDER THE RADAR</h2>
+            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              VIEW MORE
+            </button>
+          </div>
+          <div className="radar-scroll">
+            {booksData.slice(3, 9).map((book, index) => (
+              <div 
+                key={book.isbn || index} 
+                className="radar-card"
+                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+              >
+                <div className="radar-cover">
+                  {book.image ? (
+                    <img src={book.image} alt={book.title} />
+                  ) : (
+                    <div className="radar-placeholder">
+                      <span>{book.title.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="radar-info">
+                  <p className="radar-author">{book.author}</p>
+                  <p className="radar-title">{book.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ON THIS DAY Section */}
+        <section className="on-this-day-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">ON THIS DAY</h2>
+            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              VIEW MORE
+            </button>
+          </div>
+          <div className="on-this-day-grid">
+            {[
+              {
+                yearsAgo: 10,
+                book: booksData.find(b => b.title === "The Great Gatsby") || booksData[0],
+                criticScore: 74,
+                criticCount: 44,
+                userScore: 76,
+                userCount: 3096
+              },
+              {
+                yearsAgo: 30,
+                book: booksData.find(b => b.title === "1984") || booksData[2],
+                criticScore: 60,
+                criticCount: 1,
+                userScore: 79,
+                userCount: 139
+              }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className="on-this-day-card"
+                onClick={() => navigate(`/book/isbn/${item.book.isbn}`)}
+              >
+                <div className="on-this-day-label">{item.yearsAgo} YEARS AGO</div>
+                <div className="on-this-day-content">
+                  <div className="on-this-day-cover">
+                    {item.book.image ? (
+                      <img src={item.book.image} alt={item.book.title} />
+                    ) : (
+                      <div className="on-this-day-placeholder">
+                        <span>{item.book.title.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="on-this-day-info">
+                    <p className="on-this-day-author">{item.book.author}</p>
+                    <h3 className="on-this-day-title">{item.book.title}</h3>
+                    <div className="on-this-day-scores">
+                      <div className="on-this-day-score-line">
+                        <div className="on-this-day-score-bar">
+                          <div 
+                            className="on-this-day-score-fill" 
+                            style={{ width: `${item.criticScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="on-this-day-score-text">
+                          {item.criticScore} critic score ({item.criticCount})
+                        </span>
+                      </div>
+                      <div className="on-this-day-score-line">
+                        <div className="on-this-day-score-bar">
+                          <div 
+                            className="on-this-day-score-fill" 
+                            style={{ width: `${item.userScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="on-this-day-score-text">
+                          {item.userScore} user score ({item.userCount.toLocaleString()})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* RECENTLY ADDED Section */}
+        <section className="recently-added-section">
+          <div className="section-header-aoty">
+            <h2 className="section-title-aoty">RECENTLY ADDED</h2>
+            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              VIEW MORE
+            </button>
+          </div>
+          <div className="recently-added-scroll">
+            {booksData.slice(0, 6).map((book, index) => (
+              <div 
+                key={book.isbn || index} 
+                className="recently-added-card"
+                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+              >
+                <div className="recently-added-cover">
+                  {book.image ? (
+                    <img src={book.image} alt={book.title} />
+                  ) : (
+                    <div className="recently-added-placeholder">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Bottom Three Column Section */}
+        <section className="bottom-section">
+          <div className="bottom-three-columns">
+            {/* Left: Users' Best */}
+            <div className="bottom-column">
+              <h3 className="bottom-column-title">USERS' BEST BOOKS OF 2025</h3>
+              <div className="bottom-list">
+                {trendingBooks.slice(0, 5).map((book, index) => (
+                  <div 
+                    key={book.isbn || index} 
+                    className="bottom-list-item"
+                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                  >
+                    <div className="bottom-list-image">
+                      {book.image ? (
+                        <img src={book.image} alt={book.title} />
+                      ) : (
+                        <div className="bottom-list-placeholder">
+                          <span>{book.title.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bottom-list-content">
+                      <p className="bottom-list-title">{book.title}</p>
+                      <p className="bottom-list-author">{book.author}</p>
+                    </div>
+                    <div className="bottom-list-rating">{Math.floor(book.rating * 20)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="bottom-buttons">
+                <button className="bottom-btn primary" onClick={() => navigate('/my-library')}>
+                  MY LIBRARY
+                </button>
+                <button className="bottom-btn secondary" onClick={() => navigate('/sign-in')}>
+                  SIGN IN
+                </button>
+              </div>
+            </div>
+
+            {/* Middle: Best Books */}
+            <div className="bottom-column">
+              <h3 className="bottom-column-title">BEST BOOKS OF 2025</h3>
+              <div className="publications-grid">
+                {['PITCHFORK', 'THE NEW YORK TIMES', 'THE GUARDIAN', 'NPR', 'BOOKLIST', 'PUBLISHERS WEEKLY'].map((pub, index) => (
+                  <div key={index} className="publication-logo">
+                    {pub}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Popular Genres */}
+            <div className="bottom-column">
+              <h3 className="bottom-column-title">POPULAR GENRES</h3>
+              <div className="genres-list">
+                {['Fiction', 'Fantasy', 'Romance', 'Mystery', 'Science Fiction', 'Non-Fiction'].map((genre, index) => (
+                  <button 
+                    key={index}
+                    className="genre-item"
+                    onClick={() => navigate('/advanced-search')}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="home-footer">
+          <div className="footer-columns">
+            <div className="footer-column">
+              <h4 className="footer-title">BOOKS</h4>
+              <ul className="footer-links">
+                <li><button onClick={() => navigate('/advanced-search')}>Highest Rated</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Overview</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>On This Day</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>New Releases</button></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h4 className="footer-title">AUTHORS</h4>
+              <ul className="footer-links">
+                <li><button onClick={() => navigate('/advanced-search')}>Browse</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Popular</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>New</button></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h4 className="footer-title">GENRE</h4>
+              <ul className="footer-links">
+                <li><button onClick={() => navigate('/advanced-search')}>Fiction</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Fantasy</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Romance</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Mystery</button></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h4 className="footer-title">MORE</h4>
+              <ul className="footer-links">
+                <li><button onClick={() => navigate('/resources')}>Resources</button></li>
+                <li><button onClick={() => navigate('/my-library')}>My Library</button></li>
+                <li><button onClick={() => navigate('/sign-in')}>Sign In</button></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h4 className="footer-title">SITE DETAILS</h4>
+              <ul className="footer-links">
+                <li><button>FAQ</button></li>
+                <li><button>About</button></li>
+                <li><button>Contact</button></li>
+                <li><button>Privacy</button></li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-social">
+            <a href="#" className="social-icon" aria-label="Instagram">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+            <a href="#" className="social-icon" aria-label="Twitter">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+              </svg>
+            </a>
+            <a href="#" className="social-icon" aria-label="Facebook">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+          </div>
+        </footer>
       </div>
     </div>
   )

@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import styles from './BookCard.module.css'
 
 const BookCard = ({ book, onAddToCart, variant = 'grid' }) => {
+  const navigate = useNavigate()
+
   const handleAddToCart = (e) => {
     e.stopPropagation()
     if (onAddToCart) {
@@ -8,8 +11,17 @@ const BookCard = ({ book, onAddToCart, variant = 'grid' }) => {
     }
   }
 
+  const handleCardClick = () => {
+    // Navigate to book details using ISBN
+    navigate(`/book/isbn/${book.isbn}`)
+  }
+
   return (
-    <article className={variant === 'grid' ? styles.bookCardGrid : styles.bookCard}>
+    <article 
+      className={variant === 'grid' ? styles.bookCardGrid : styles.bookCard}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={styles.bookCover}>
         {book.image ? (
           <img 

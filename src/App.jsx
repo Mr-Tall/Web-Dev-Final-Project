@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import AdvancedSearch from './pages/AdvancedSearch'
 import BookDetails from './pages/BookDetails'
+import BookReviews from './pages/BookReviews'
 import ResourcesPage from './pages/ResourcesPage'
 import MyLibrary from './pages/MyLibrary'
 import SignIn from './pages/SignIn'
@@ -18,6 +19,8 @@ function App() {
           <Route path="/advanced-search" element={<AdvancedSearch />} />
           <Route path="/book/:id" element={<BookDetails />} />
           <Route path="/book-details" element={<BookDetails />} />
+          <Route path="/book/isbn/:isbn" element={<BookDetails />} />
+          <Route path="/book-reviews" element={<BookReviews />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/my-library" element={<MyLibrary />} />
           <Route path="/sign-in" element={<SignIn />} />

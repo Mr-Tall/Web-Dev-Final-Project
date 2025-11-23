@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import './ResourcesPage.css'
 
 const RESOURCE_DATA = [
   {
@@ -96,94 +97,87 @@ export default function ResourcesPage() {
   })
 
   return (
-    <div className="page-shell resources-page">
-      <section className="page-header-block">
-        <h1>Resources &amp; Highlights</h1>
-        <p className="page-subtitle">
-          Explore events, services, guides, and databases available through the
-          Boston College Libraries.
-        </p>
-      </section>
-
-      <section className="filters-section">
-        <div className="filter-buttons">
-          <button
-            className={
-              'chip' + (activeFilter === 'all' ? ' chip-active' : '')
-            }
-            onClick={() => setActiveFilter('all')}
-          >
-            All
-          </button>
-          <button
-            className={
-              'chip' + (activeFilter === 'event' ? ' chip-active' : '')
-            }
-            onClick={() => setActiveFilter('event')}
-          >
-            Events
-          </button>
-          <button
-            className={
-              'chip' + (activeFilter === 'service' ? ' chip-active' : '')
-            }
-            onClick={() => setActiveFilter('service')}
-          >
-            Services
-          </button>
-          <button
-            className={
-              'chip' + (activeFilter === 'guide' ? ' chip-active' : '')
-            }
-            onClick={() => setActiveFilter('guide')}
-          >
-            Guides
-          </button>
-          <button
-            className={
-              'chip' + (activeFilter === 'database' ? ' chip-active' : '')
-            }
-            onClick={() => setActiveFilter('database')}
-          >
-            Databases
-          </button>
+    <div className="resources-page">
+      <div className="resources-container">
+        {/* Page Header */}
+        <div className="resources-header">
+          <h1 className="resources-title">Resources &amp; Highlights</h1>
+          <p className="resources-subtitle">
+            Explore events, services, guides, and databases available through the
+            Boston College Libraries.
+          </p>
         </div>
 
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search resources by title, topic, or description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Search resources"
-          />
-        </div>
-      </section>
+        {/* Filters Section */}
+        <div className="resources-filters">
+          <div className="filter-buttons">
+            <button
+              className={`filter-chip ${activeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('all')}
+            >
+              All
+            </button>
+            <button
+              className={`filter-chip ${activeFilter === 'event' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('event')}
+            >
+              Events
+            </button>
+            <button
+              className={`filter-chip ${activeFilter === 'service' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('service')}
+            >
+              Services
+            </button>
+            <button
+              className={`filter-chip ${activeFilter === 'guide' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('guide')}
+            >
+              Guides
+            </button>
+            <button
+              className={`filter-chip ${activeFilter === 'database' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('database')}
+            >
+              Databases
+            </button>
+          </div>
 
-      <section className="cards-section" aria-label="Library resources">
-        <div className="cards-grid">
+          <div className="resources-search">
+            <input
+              type="text"
+              placeholder="Search resources by title, topic, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Search resources"
+            />
+          </div>
+        </div>
+
+        {/* Resources Grid */}
+        <div className="resources-grid">
           {filteredResources.map((item) => (
             <article
               key={item.id}
-              className="card resource-card"
+              className="resource-card"
               data-category={item.category}
             >
-              <div className="card-tag">{item.tag}</div>
-              <h2 className="card-title">{item.title}</h2>
-              <p className="card-meta">{item.meta}</p>
-              <p className="card-body">{item.body}</p>
-              <button className="card-cta">{item.cta}</button>
+              <div className="resource-tag">{item.tag}</div>
+              <h2 className="resource-card-title">{item.title}</h2>
+              <p className="resource-card-meta">{item.meta}</p>
+              <p className="resource-card-body">{item.body}</p>
+              <button className="resource-card-cta">{item.cta}</button>
             </article>
           ))}
 
           {filteredResources.length === 0 && (
-            <p className="empty-message">
+            <p className="resources-empty">
               No resources match your search yet. Try a different keyword or
               filter.
             </p>
           )}
         </div>
-      </section>
+      </div>
     </div>
   )
 }
