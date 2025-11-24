@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
-import booksData from '../data/books.json'
-import librariesData from '../data/libraries.json'
-import commentsData from '../data/comments.json'
-import APP_CONFIG from '../config/constants'
+import booksData from '../../data/books/books.json'
+import librariesData from '../../data/config/libraries.json'
+import commentsData from '../../data/books/comments.json'
+import APP_CONFIG from '../../config/constants'
 import './BookDetails.css'
 
 export default function BookDetails() {
