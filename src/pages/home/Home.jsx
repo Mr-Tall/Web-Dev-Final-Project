@@ -486,28 +486,35 @@ function Home() {
             <div className="bottom-column">
               <h3 className="bottom-column-title">USERS' BEST BOOKS OF 2025</h3>
               <div className="bottom-list">
-                {trendingBooks.slice(0, 5).map((book, index) => (
-                  <div 
-                    key={book.isbn || index} 
-                    className="bottom-list-item"
-                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
-                  >
-                    <div className="bottom-list-image">
-                      {book.image ? (
-                        <img src={book.image} alt={book.title} />
-                      ) : (
-                        <div className="bottom-list-placeholder">
-                          <span>{book.title.charAt(0)}</span>
-                        </div>
-                      )}
+                {trendingBooks.slice(0, 5).map((book, index) => {
+                  // Use same scoring system as elsewhere on the page
+                  const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
+                  const userScore = parseFloat((book.rating + ((seed % 8 - 4) * 0.05)).toFixed(1))
+                  const normalizedScore = Math.max(0, Math.min(5, userScore)) // Clamp between 0-5
+                  
+                  return (
+                    <div 
+                      key={book.isbn || index} 
+                      className="bottom-list-item"
+                      onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
+                    >
+                      <div className="bottom-list-image">
+                        {book.image ? (
+                          <img src={book.image} alt={book.title} />
+                        ) : (
+                          <div className="bottom-list-placeholder">
+                            <span>{book.title.charAt(0)}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="bottom-list-content">
+                        <p className="bottom-list-title">{book.title}</p>
+                        <p className="bottom-list-author">{book.author}</p>
+                      </div>
+                      <div className="bottom-list-rating">{normalizedScore.toFixed(1)}/5</div>
                     </div>
-                    <div className="bottom-list-content">
-                      <p className="bottom-list-title">{book.title}</p>
-                      <p className="bottom-list-author">{book.author}</p>
-                    </div>
-                    <div className="bottom-list-rating">{Math.floor(book.rating * 20)}</div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
               <div className="bottom-buttons">
                 <button className="bottom-btn primary" onClick={() => handleNavigate('/my-library')}>
