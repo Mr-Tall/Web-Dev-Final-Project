@@ -1,19 +1,18 @@
 import { useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import booksData from '../../data/books/books.json'
-import librariesData from '../../data/config/libraries.json'
 import commentsData from '../../data/books/comments.json'
 import APP_CONFIG from '../../config/constants'
+import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription } from '../../utils/bookUtils'
 import './BookDetails.css'
 
 export default function BookDetails() {
   const { id, isbn } = useParams()
-  const navigate = useNavigate()
   const location = useLocation()
 
   // Find the book by ID (using ISBN or index)
-  const book = useMemo(() => {
+  const { book, bookNotFound } = useMemo(() => {
     // Check if we have ISBN in params
     const bookIdentifier = isbn || id || location.pathname.split('/').pop()
     
@@ -24,48 +23,33 @@ export default function BookDetails() {
         const searchIsbn = bookIdentifier.replace(/-/g, '')
         return b.isbn === bookIdentifier || bookIsbn === searchIsbn
       })
-      if (foundByIsbn) return foundByIsbn
+      if (foundByIsbn) return { book: foundByIsbn, bookNotFound: false }
       
       // Otherwise try by index
       const index = parseInt(bookIdentifier)
       if (!isNaN(index) && index >= 0 && index < booksData.length) {
-        return booksData[index]
+        return { book: booksData[index], bookNotFound: false }
       }
     }
-    // Default to first book if no ID or not found
-    return booksData[0]
+    // Book not found
+    return { book: null, bookNotFound: true }
   }, [id, isbn, location.pathname])
 
-  // Calculate read time (approximate: 200 words per minute, average book ~50k words)
-  const estimatedPages = APP_CONFIG.DEFAULT_ESTIMATED_PAGES
-  const readTimeMinutes = Math.round(estimatedPages * (APP_CONFIG.AVERAGE_WORDS_PER_PAGE / APP_CONFIG.WORDS_PER_MINUTE))
+  // If book not found, this shouldn't happen as App.jsx handles routing
+  // But just in case, return null
+  if (bookNotFound || !book) {
+    return null
+  }
 
-  // Format release date
-  const releaseDate = new Date(book.releaseDate)
-  const formattedDate = releaseDate.toLocaleDateString('en-US', { 
-    month: 'long', 
-    year: 'numeric' 
-  })
-
-  // Generate description if not available
-  const description = `${
-    book.title
-  } is a timeless classic that captures the essence of ${
-    book.genre.toLowerCase()
-  } literature. Written by the acclaimed author ${
-    book.author
-  }, this work explores themes of human experience, society, and the complexities of life. Through its vivid prose and unforgettable characters, this novel continues to resonate with readers across generations.`
+  // Calculate read time and format date
+  const readTimeMinutes = calculateReadTime()
+  const formattedDate = formatDate(book.releaseDate)
+  const description = generateBookDescription(book)
 
   // Generate library availability (mock data based on book)
   // TODO: Replace with API call to get real availability
   const libraryAvailability = useMemo(() => {
-    // Generate availability based on book ISBN for consistency
-    const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    return librariesData.map((library, index) => {
-      const available = (seed + index) % 3 !== 0 // Some libraries have it, some don't
-      const quantity = available ? Math.floor((seed + index) % 5) + 1 : 0
-      return { library, available, quantity }
-    })
+    return generateLibraryAvailability(book.isbn)
   }, [book.isbn])
 
   // Get comments for this book from JSON (fallback to default if not found)
@@ -125,7 +109,7 @@ export default function BookDetails() {
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Pages:</span>
-                  <span className="spec-value">{estimatedPages}</span>
+                  <span className="spec-value">{APP_CONFIG.DEFAULT_ESTIMATED_PAGES}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Read Time*:</span>
@@ -158,8 +142,8 @@ export default function BookDetails() {
               </div>
 
               <div className="library-list">
-                {libraryAvailability.map((lib, index) => (
-                  <div key={index} className="library-item">
+                {libraryAvailability.map((lib) => (
+                  <div key={lib.library} className="library-item">
                     <div className="library-name-row">
                       <span className="library-name">{lib.library}</span>
                       <span className={`library-status ${lib.available ? 'available' : 'unavailable'}`}>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import './ResourcesPage.css'
 import resourcesData from '../../data/resources/resourcesData.json'
 
@@ -6,13 +6,15 @@ export default function ResourcesPage() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredResources = resourcesData.filter((item) => {
+  const filteredResources = useMemo(() => {
+    return resourcesData.filter((item) => {
     const matchesFilter =
       activeFilter === 'all' || item.category === activeFilter
-    const textBlob = `${item.title} ${item.meta} ${item.body}`.toLowerCase()
-    const matchesSearch = textBlob.includes(searchTerm.toLowerCase())
-    return matchesFilter && matchesSearch
-  })
+      const textBlob = `${item.title} ${item.meta} ${item.body}`.toLowerCase()
+      const matchesSearch = textBlob.includes(searchTerm.toLowerCase())
+      return matchesFilter && matchesSearch
+    })
+  }, [activeFilter, searchTerm])
 
   return (
     <div className="resources-page">

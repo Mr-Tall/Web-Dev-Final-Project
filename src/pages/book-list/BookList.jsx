@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import booksData from '../../data/books/books.json'
 import criticSourcesData from '../../data/reviews/criticSources.json'
+import { formatDate } from '../../utils/bookUtils'
 import './BookList.css'
 
 function BookList() {
   const navigate = useNavigate()
-  const { listType } = useParams()
-  const [decadeFilter, setDecadeFilter] = useState('2020s')
-  const [sourceFilter, setSourceFilter] = useState('All')
+  // listType is available for future use when implementing different list types
+  const [decadeFilter] = useState('2020s')
+  const [sourceFilter] = useState('All')
   const [genreFilter, setGenreFilter] = useState('All')
   const [yearFilter, setYearFilter] = useState('2025')
 
@@ -52,14 +53,6 @@ function BookList() {
     })
   }, [books])
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      day: 'numeric', 
-      year: 'numeric' 
-    })
-  }
 
   return (
     <div className="book-list-page">
@@ -144,7 +137,7 @@ function BookList() {
                       )}
                     </div>
                     <div className="book-list-meta">
-                      <span className="book-list-date">{formatDate(book.releaseDate)}</span>
+                      <span className="book-list-date">{formatDate(book.releaseDate, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                       <span className="book-list-genre">{book.genre}</span>
                     </div>
                     <div className="book-list-score-section">

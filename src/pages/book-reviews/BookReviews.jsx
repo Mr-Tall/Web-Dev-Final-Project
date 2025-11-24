@@ -36,12 +36,14 @@ function BookReviews() {
 
   // Generate mock review data for books
   // TODO: Replace with API call to get real review data
+  // Using seed-based approach for stable values across renders
   const booksWithReviews = useMemo(() => {
     return booksData.map((book, index) => {
       const baseRating = book.rating || 4.0
-      const ratingCount = Math.floor(Math.random() * (APP_CONFIG.RATING_COUNT_MAX - APP_CONFIG.RATING_COUNT_MIN + 1)) + APP_CONFIG.RATING_COUNT_MIN
-      const reviewCount = Math.floor(ratingCount * 0.01) + Math.floor(Math.random() * (APP_CONFIG.REVIEW_COUNT_MAX - APP_CONFIG.REVIEW_COUNT_MIN + 1)) + APP_CONFIG.REVIEW_COUNT_MIN
-      const formattedRating = (baseRating + (Math.random() * 0.5 - 0.25)).toFixed(2)
+      const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
+      const ratingCount = APP_CONFIG.RATING_COUNT_MIN + ((seed * 11) % (APP_CONFIG.RATING_COUNT_MAX - APP_CONFIG.RATING_COUNT_MIN + 1))
+      const reviewCount = Math.floor(ratingCount * 0.01) + APP_CONFIG.REVIEW_COUNT_MIN + ((seed * 7) % (APP_CONFIG.REVIEW_COUNT_MAX - APP_CONFIG.REVIEW_COUNT_MIN + 1))
+      const formattedRating = (baseRating + ((seed % 10 - 5) * 0.05)).toFixed(2)
       
       return {
         ...book,

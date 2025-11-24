@@ -58,7 +58,7 @@ function AdvancedSearch() {
   }, [])
 
   const handleAddToCart = useCallback((book) => {
-    // TODO: Implement cart functionality
+    // Add to cart functionality - placeholder for future implementation// TODO: Implement cart functionality
     // This would typically add the book to a cart state/API
   }, [])
 

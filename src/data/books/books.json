@@ -57,7 +57,7 @@
     "title": "The Fellowship of the Ring",
     "author": "J.R.R. Tolkien",
     "releaseDate": "1954-07-29",
-    "isbn": "978-0-544-00035-4",
+    "isbn": "978-0-544-00036-1",
     "rating": 4.9,
     "genre": "Fantasy",
     "image": "/images/books/fellowship.jpg"
@@ -66,7 +66,7 @@
     "title": "The Two Towers",
     "author": "J.R.R. Tolkien",
     "releaseDate": "1954-11-11",
-    "isbn": "978-0-544-00035-4",
+    "isbn": "978-0-544-00037-8",
     "rating": 4.8,
     "genre": "Fantasy",
     "image": "/images/books/towers.jpg"
@@ -75,7 +75,7 @@
     "title": "The Return of the King",
     "author": "J.R.R. Tolkien",
     "releaseDate": "1955-10-20",
-    "isbn": "978-0-544-00035-4",
+    "isbn": "978-0-544-00038-5",
     "rating": 4.9,
     "genre": "Fantasy",
     "image": "/images/books/king.jpg"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
@@ -8,10 +8,10 @@ function Navbar() {
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  const handleNavClick = (path) => {
+  const handleNavClick = useCallback((path) => {
     navigate(path)
     setIsAccountDropdownOpen(false)
-  }
+  }, [navigate])
 
   // Close dropdown when clicking outside
   useEffect(() => {

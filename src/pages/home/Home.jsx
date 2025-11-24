@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import booksData from '../../data/books/books.json'
 import resourcesData from '../../data/resources/resources.json'
@@ -11,6 +11,11 @@ import './Home.css'
 
 function Home() {
   const navigate = useNavigate()
+
+  // Memoize navigation handlers
+  const handleNavigate = useCallback((path) => {
+    navigate(path)
+  }, [navigate])
 
   // Memoize sorted book arrays
   const newReleases = useMemo(() => 
@@ -27,12 +32,18 @@ function Home() {
 
   // Generate mock review counts for books (user scores out of 5)
   // TODO: Replace with API call to get real user scores and counts
+  // Using seed-based approach for stable values across renders
   const booksWithScores = useMemo(() => {
-    return newReleases.map(book => ({
-      ...book,
-      userScore: parseFloat((book.rating + (Math.random() * 0.4 - 0.2)).toFixed(1)), // Score out of 5
-      userCount: Math.floor(Math.random() * (APP_CONFIG.USER_COUNT_MAX - APP_CONFIG.USER_COUNT_MIN + 1)) + APP_CONFIG.USER_COUNT_MIN
-    }))
+    return newReleases.map((book, index) => {
+      const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
+      const userScore = parseFloat((book.rating + ((seed % 8 - 4) * 0.05)).toFixed(1))
+      const userCount = APP_CONFIG.USER_COUNT_MIN + ((seed * 7) % (APP_CONFIG.USER_COUNT_MAX - APP_CONFIG.USER_COUNT_MIN + 1))
+      return {
+        ...book,
+        userScore: Math.max(0, Math.min(5, userScore)), // Clamp between 0-5
+        userCount
+      }
+    })
   }, [newReleases])
   
   // Map user reviews to books
@@ -55,7 +66,7 @@ function Home() {
             <h2 className="section-title-aoty">NEW RELEASES</h2>
             <div className="section-header-links">
               <button className="header-link active">BOOKS</button>
-              <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
                 VIEW ALL
               </button>
             </div>
@@ -102,16 +113,16 @@ function Home() {
         <section className="newsworthy-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">RESOURCES</h2>
-            <button className="header-link" onClick={() => navigate('/resources')}>
+            <button className="header-link" onClick={() => handleNavigate('/resources')}>
               VIEW ALL
             </button>
           </div>
           <div className="newsworthy-grid">
-            {resourcesData.map((item, index) => (
+            {resourcesData.map((item) => (
               <article 
-                key={index} 
+                key={item.id} 
                 className="newsworthy-card"
-                onClick={() => navigate('/resources')}
+                onClick={() => handleNavigate('/resources')}
               >
                 <div className="newsworthy-image" style={{ backgroundColor: item.color }}>
                   <div className="resource-icon">{item.icon}</div>
@@ -145,7 +156,7 @@ function Home() {
                 <button 
                   key={option}
                   className="browse-btn" 
-                  onClick={() => navigate('/advanced-search')}
+                    onClick={() => handleNavigate('/advanced-search')}
                 >
                   {option}
                 </button>
@@ -159,7 +170,7 @@ function Home() {
           <div className="anticipated-main">
             <div className="section-header-aoty">
               <h2 className="section-title-aoty">HIGHLY ANTICIPATED BOOKS</h2>
-              <button className="header-link" onClick={() => navigate('/advanced-search')}>
+              <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
                 VIEW ALL
               </button>
             </div>
@@ -171,14 +182,16 @@ function Home() {
                   day: 'numeric',
                   year: 'numeric'
                 })
-                const comments = Math.floor(Math.random() * (APP_CONFIG.COMMENTS_MAX - APP_CONFIG.COMMENTS_MIN + 1)) + APP_CONFIG.COMMENTS_MIN
-                const views = Math.floor(Math.random() * (APP_CONFIG.VIEWS_MAX - APP_CONFIG.VIEWS_MIN + 1)) + APP_CONFIG.VIEWS_MIN
+                // Use seed-based approach for stable values
+                const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
+                const comments = APP_CONFIG.COMMENTS_MIN + ((seed * 3) % (APP_CONFIG.COMMENTS_MAX - APP_CONFIG.COMMENTS_MIN + 1))
+                const views = APP_CONFIG.VIEWS_MIN + ((seed * 5) % (APP_CONFIG.VIEWS_MAX - APP_CONFIG.VIEWS_MIN + 1))
                 
                 return (
                   <div 
                     key={book.isbn || index} 
                     className="anticipated-card"
-                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
                   >
                     <div className="anticipated-cover">
                       {book.image ? (
@@ -220,12 +233,14 @@ function Home() {
               <h3 className="sidebar-title">USERS' BEST</h3>
               {trendingBooks.slice(0, 5).map((book, index) => {
                 // TODO: Replace with API call to get real user ratings
-                const userRating = parseFloat((book.rating + (Math.random() * 0.4 - 0.2)).toFixed(1))
+                // Use seed-based approach for stable values
+                const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
+                const userRating = parseFloat((book.rating + ((seed % 8 - 4) * 0.05)).toFixed(1))
                 return (
                   <div 
                     key={book.isbn || index} 
                     className="sidebar-item"
-                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
                   >
                     <div className="sidebar-image">
                       {book.image ? (
@@ -291,13 +306,13 @@ function Home() {
         <section className="user-reviews-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">POPULAR USER REVIEWS</h2>
-            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
               VIEW MORE
             </button>
           </div>
           <div className="reviews-scroll">
-            {reviewsWithBooks.map((review, index) => (
-              <div key={index} className="review-card">
+            {reviewsWithBooks.map((review) => (
+              <div key={`${review.bookIsbn}-${review.reviewer}`} className="review-card">
                 <div className="review-cover">
                   {review.book.image ? (
                     <img src={review.book.image} alt={review.book.title} />
@@ -341,7 +356,7 @@ function Home() {
         <section className="under-radar-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">UNDER THE RADAR</h2>
-            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
               VIEW MORE
             </button>
           </div>
@@ -374,7 +389,7 @@ function Home() {
         <section className="on-this-day-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">ON THIS DAY</h2>
-            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
               VIEW MORE
             </button>
           </div>
@@ -392,11 +407,11 @@ function Home() {
                 userScore: 4.5,
                 userCount: 139
               }
-            ].map((item, index) => (
+            ].map((item) => (
               <div 
-                key={index} 
+                key={`on-this-day-${item.book.isbn}-${item.yearsAgo}`} 
                 className="on-this-day-card"
-                onClick={() => navigate(`/book/isbn/${item.book.isbn}`)}
+                onClick={() => handleNavigate(`/book/isbn/${item.book.isbn}`)}
               >
                 <div className="on-this-day-label">{item.yearsAgo} YEARS AGO</div>
                 <div className="on-this-day-content">
@@ -436,7 +451,7 @@ function Home() {
         <section className="recently-added-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">RECENTLY ADDED</h2>
-            <button className="header-link" onClick={() => navigate('/advanced-search')}>
+            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
               VIEW MORE
             </button>
           </div>
@@ -475,7 +490,7 @@ function Home() {
                   <div 
                     key={book.isbn || index} 
                     className="bottom-list-item"
-                    onClick={() => navigate(`/book/isbn/${book.isbn}`)}
+                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
                   >
                     <div className="bottom-list-image">
                       {book.image ? (
@@ -495,10 +510,10 @@ function Home() {
                 ))}
               </div>
               <div className="bottom-buttons">
-                <button className="bottom-btn primary" onClick={() => navigate('/my-library')}>
+                <button className="bottom-btn primary" onClick={() => handleNavigate('/my-library')}>
                   MY LIBRARY
                 </button>
-                <button className="bottom-btn secondary" onClick={() => navigate('/sign-in')}>
+                <button className="bottom-btn secondary" onClick={() => handleNavigate('/sign-in')}>
                   SIGN IN
                 </button>
               </div>
@@ -508,11 +523,11 @@ function Home() {
             <div className="bottom-column">
               <h3 className="bottom-column-title">BEST BOOKS OF 2025</h3>
               <div className="publication-links">
-                {publicationsData.map((pub, index) => (
+                {publicationsData.map((pub) => (
                   <button
-                    key={index}
+                    key={pub}
                     className="publication-link-btn"
-                    onClick={() => navigate(`/book-list/${pub.toLowerCase().replace(/\s+/g, '-')}`)}
+                    onClick={() => handleNavigate(`/book-list/${pub.toLowerCase().replace(/\s+/g, '-')}`)}
                   >
                     {pub}
                   </button>
@@ -524,11 +539,11 @@ function Home() {
             <div className="bottom-column">
               <h3 className="bottom-column-title">POPULAR GENRES</h3>
               <div className="genres-list">
-                {genresData.map((genre, index) => (
+                {genresData.map((genre) => (
                   <button 
-                    key={index}
+                    key={genre}
                     className="genre-item"
-                    onClick={() => navigate('/advanced-search')}
+                    onClick={() => handleNavigate('/advanced-search')}
                   >
                     {genre}
                   </button>
@@ -553,7 +568,7 @@ function Home() {
             <div className="footer-column">
               <h4 className="footer-title">AUTHORS</h4>
               <ul className="footer-links">
-                <li><button onClick={() => navigate('/advanced-search')}>Browse</button></li>
+                <li><button onClick={() => handleNavigate('/advanced-search')}>Browse</button></li>
                 <li><button onClick={() => navigate('/advanced-search', { state: { sortBy: 'popular' } })}>Popular</button></li>
                 <li><button onClick={() => navigate('/advanced-search', { state: { sortBy: 'new' } })}>New</button></li>
               </ul>
@@ -570,18 +585,18 @@ function Home() {
             <div className="footer-column">
               <h4 className="footer-title">MORE</h4>
               <ul className="footer-links">
-                <li><button onClick={() => navigate('/resources')}>Resources</button></li>
-                <li><button onClick={() => navigate('/my-library')}>My Library</button></li>
-                <li><button onClick={() => navigate('/sign-in')}>Sign In</button></li>
+                <li><button onClick={() => handleNavigate('/resources')}>Resources</button></li>
+                <li><button onClick={() => handleNavigate('/my-library')}>My Library</button></li>
+                <li><button onClick={() => handleNavigate('/sign-in')}>Sign In</button></li>
               </ul>
             </div>
             <div className="footer-column">
               <h4 className="footer-title">SITE DETAILS</h4>
               <ul className="footer-links">
-                <li><button onClick={() => navigate('/faq')}>FAQ</button></li>
-                <li><button onClick={() => navigate('/about')}>About</button></li>
-                <li><button onClick={() => navigate('/contact')}>Contact</button></li>
-                <li><button onClick={() => navigate('/privacy')}>Privacy</button></li>
+                <li><button onClick={() => handleNavigate('/faq')}>FAQ</button></li>
+                <li><button onClick={() => handleNavigate('/about')}>About</button></li>
+                <li><button onClick={() => handleNavigate('/contact')}>Contact</button></li>
+                <li><button onClick={() => handleNavigate('/privacy')}>Privacy</button></li>
               </ul>
             </div>
           </div>

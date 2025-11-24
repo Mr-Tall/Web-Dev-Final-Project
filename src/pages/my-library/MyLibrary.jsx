@@ -1,17 +1,19 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import myLibraryData from '../../data/books/myLibrary.json'
 import libraryStatsData from '../../data/config/libraryStats.json'
 
 export default function MyLibrary() {
   const [activeFilter, setActiveFilter] = useState('all')
 
-  const filteredBooks = myLibraryData.filter((book) => {
-    if (activeFilter === 'saved') return book.saved
-    if (activeFilter === 'favorite') return book.favorite
-    if (activeFilter === 'rated') return book.rated
-    if (activeFilter === 'reviewed') return book.reviewed
-    return true
-  })
+  const filteredBooks = useMemo(() => {
+    return myLibraryData.filter((book) => {
+      if (activeFilter === 'saved') return book.saved
+      if (activeFilter === 'favorite') return book.favorite
+      if (activeFilter === 'rated') return book.rated
+      if (activeFilter === 'reviewed') return book.reviewed
+      return true
+    })
+  }, [activeFilter])
 
   // Calculate stats from data (can be replaced with API call)
   // TODO: Replace with API call to get real user stats

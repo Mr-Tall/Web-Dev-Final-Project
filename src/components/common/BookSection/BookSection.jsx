@@ -1,25 +1,37 @@
+import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './BookSection.css'
 
 function BookSection({ title, books }) {
   const navigate = useNavigate()
 
-  if (books.length === 0) return null
-
-  const handleBookClick = (book) => {
+  const handleBookClick = useCallback((book) => {
     navigate(`/book/isbn/${book.isbn}`)
-  }
+  }, [navigate])
+
+  const displayedBooks = useMemo(() => books.slice(0, 8), [books])
+
+  if (books.length === 0) return null
 
   return (
     <section className="book-section">
       <h2 className="section-title">{title}</h2>
       <div className="books-grid">
-        {books.slice(0, 8).map((book, index) => (
+        {displayedBooks.map((book) => (
           <div 
-            key={index} 
+            key={book.isbn || book.id} 
             className="book-card-large"
             onClick={() => handleBookClick(book)}
             style={{ cursor: 'pointer' }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleBookClick(book)
+              }
+            }}
+            aria-label={`View details for ${book.title} by ${book.author}`}
           >
             {book.image && (
               <div className="book-card-cover">

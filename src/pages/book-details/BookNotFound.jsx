@@ -1,112 +1,130 @@
-import { useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useMemo } from 'react'
-import booksData from '../data/books.json'
-import librariesData from '../data/libraries.json'
-import commentsData from '../data/comments.json'
-import APP_CONFIG from '../config/constants'
+import APP_CONFIG from '../../config/constants'
+import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription } from '../../utils/bookUtils'
 import './BookDetails.css'
 
-export default function BookDetails() {
-  const { id, isbn } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
+export default function BookNotFound() {
+  const { isbn } = useParams()
 
-  // Find the book by ID (using ISBN or index)
-  const book = useMemo(() => {
-    // Check if we have ISBN in params
-    const bookIdentifier = isbn || id || location.pathname.split('/').pop()
+  // Generate mock book data based on ISBN
+  const mockBook = useMemo(() => {
+    // Generate a seed from ISBN for consistent mock data
+    const seed = isbn ? isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0
     
-    if (bookIdentifier) {
-      // Try to find by ISBN first (handle with or without dashes)
-      const foundByIsbn = booksData.find(b => {
-        const bookIsbn = b.isbn.replace(/-/g, '')
-        const searchIsbn = bookIdentifier.replace(/-/g, '')
-        return b.isbn === bookIdentifier || bookIsbn === searchIsbn
-      })
-      if (foundByIsbn) return foundByIsbn
-      
-      // Otherwise try by index
-      const index = parseInt(bookIdentifier)
-      if (!isNaN(index) && index >= 0 && index < booksData.length) {
-        return booksData[index]
-      }
+    // Generate mock title and author based on seed
+    const titles = [
+      'The Enigmatic Journey',
+      'Whispers in the Dark',
+      'Echoes of Tomorrow',
+      'The Hidden Path',
+      'Shadows and Light',
+      'The Last Chapter',
+      'Beyond the Horizon',
+      'The Silent Witness'
+    ]
+    
+    const authors = [
+      'A. M. Writer',
+      'J. K. Novelist',
+      'M. R. Storyteller',
+      'L. P. Author',
+      'R. S. Wordsmith',
+      'C. T. Narrator',
+      'E. V. Chronicler',
+      'D. W. Scribe'
+    ]
+    
+    const genres = ['Fiction', 'Mystery', 'Fantasy', 'Romance', 'Science Fiction', 'Thriller', 'Drama', 'Adventure']
+    
+    const titleIndex = seed % titles.length
+    const authorIndex = (seed * 7) % authors.length
+    const genreIndex = (seed * 3) % genres.length
+    
+    // Generate a mock release date (random year between 1950-2020)
+    const year = 1950 + (seed % 70)
+    const month = (seed % 12) + 1
+    const day = (seed % 28) + 1
+    const releaseDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    
+    // Generate rating (3.5 to 4.8)
+    const rating = 3.5 + ((seed % 13) / 10)
+    
+    return {
+      title: titles[titleIndex],
+      author: authors[authorIndex],
+      genre: genres[genreIndex],
+      isbn: isbn || '000-0-0000-0000-0',
+      releaseDate,
+      rating: parseFloat(rating.toFixed(1)),
+      image: null // No image for mock books
     }
-    // Default to first book if no ID or not found
-    return booksData[0]
-  }, [id, isbn, location.pathname])
+  }, [isbn])
 
-  // Calculate read time (approximate: 200 words per minute, average book ~50k words)
-  const estimatedPages = APP_CONFIG.DEFAULT_ESTIMATED_PAGES
-  const readTimeMinutes = Math.round(estimatedPages * (APP_CONFIG.AVERAGE_WORDS_PER_PAGE / APP_CONFIG.WORDS_PER_MINUTE))
-
-  // Format release date
-  const releaseDate = new Date(book.releaseDate)
-  const formattedDate = releaseDate.toLocaleDateString('en-US', { 
-    month: 'long', 
-    year: 'numeric' 
-  })
-
-  // Generate description if not available
-  const description = `${
-    book.title
-  } is a timeless classic that captures the essence of ${
-    book.genre.toLowerCase()
-  } literature. Written by the acclaimed author ${
-    book.author
-  }, this work explores themes of human experience, society, and the complexities of life. Through its vivid prose and unforgettable characters, this novel continues to resonate with readers across generations.`
-
-  // Generate library availability (mock data based on book)
-  // TODO: Replace with API call to get real availability
+  // Generate library availability (mock data)
   const libraryAvailability = useMemo(() => {
-    // Generate availability based on book ISBN for consistency
-    const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    return librariesData.map((library, index) => {
-      const available = (seed + index) % 3 !== 0 // Some libraries have it, some don't
-      const quantity = available ? Math.floor((seed + index) % 5) + 1 : 0
-      return { library, available, quantity }
-    })
-  }, [book.isbn])
+    return generateLibraryAvailability(mockBook.isbn)
+  }, [mockBook.isbn])
 
-  // Get comments for this book from JSON (fallback to default if not found)
-  // TODO: Replace with API call to get real comments
-  const [comments] = useState(() => {
-    const normalizedIsbn = book.isbn.replace(/-/g, '')
-    const bookComments = Object.keys(commentsData).find(key => 
-      key.replace(/-/g, '') === normalizedIsbn || key === 'default'
-    )
-    return commentsData[bookComments] || commentsData.default || []
-  })
+  const formattedDate = formatDate(mockBook.releaseDate)
+  const readTimeMinutes = calculateReadTime()
+  const description = generateBookDescription(mockBook)
+
+  // Mock comments
+  const mockComments = [
+    {
+      id: 1,
+      username: 'reader123',
+      avatar: 'R1',
+      text: 'This is a placeholder book entry. The actual book details are not available in our catalog.',
+      date: '1 day ago',
+      likes: 0
+    }
+  ]
 
   return (
     <div className="book-details-page">
       <div className="book-details-container">
+        {/* Notice Banner */}
+        <div style={{
+          background: 'rgba(255, 193, 7, 0.2)',
+          border: '1px solid rgba(255, 193, 7, 0.5)',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '2rem',
+          color: 'var(--gold)'
+        }}>
+          <strong>Note:</strong> This is a mock book entry. The book with ISBN <code>{isbn}</code> is not currently in our catalog.
+        </div>
+
         {/* Main Content Grid */}
         <div className="book-details-grid">
           {/* Left: Book Cover */}
           <div className="book-cover-section">
             <div className="book-cover-wrapper">
-              {book.image ? (
-                <img src={book.image} alt={book.title} className="book-cover-image" />
-              ) : (
-                <div className="book-cover-placeholder">
-                  <span>{book.title.charAt(0)}</span>
-                </div>
-              )}
+              <div className="book-cover-placeholder" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '3rem',
+                color: 'rgba(255, 255, 255, 0.5)'
+              }}>
+                <span>📚</span>
+              </div>
             </div>
           </div>
 
           {/* Middle: Book Information */}
           <div className="book-info-section">
             <div className="book-title-row">
-              <h1 className="book-title">{book.title}</h1>
+              <h1 className="book-title">{mockBook.title}</h1>
               <button className="bookmark-btn" aria-label="Bookmark">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                 </svg>
               </button>
             </div>
-            <p className="book-author">by {book.author}</p>
+            <p className="book-author">by {mockBook.author}</p>
             
             <div className="book-description">
               <p>{description}</p>
@@ -125,7 +143,7 @@ export default function BookDetails() {
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Pages:</span>
-                  <span className="spec-value">{estimatedPages}</span>
+                  <span className="spec-value">{APP_CONFIG.DEFAULT_ESTIMATED_PAGES}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Read Time*:</span>
@@ -133,11 +151,11 @@ export default function BookDetails() {
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">ISBN:</span>
-                  <span className="spec-value">{book.isbn}</span>
+                  <span className="spec-value">{mockBook.isbn}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Category:</span>
-                  <span className="spec-value">{book.genre}</span>
+                  <span className="spec-value">{mockBook.genre}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Publisher:</span>
@@ -158,8 +176,8 @@ export default function BookDetails() {
               </div>
 
               <div className="library-list">
-                {libraryAvailability.map((lib, index) => (
-                  <div key={index} className="library-item">
+                {libraryAvailability.map((lib) => (
+                  <div key={lib.library} className="library-item">
                     <div className="library-name-row">
                       <span className="library-name">{lib.library}</span>
                       <span className={`library-status ${lib.available ? 'available' : 'unavailable'}`}>
@@ -182,12 +200,12 @@ export default function BookDetails() {
         {/* Comments Section */}
         <div className="comments-section">
           <div className="comments-header">
-            <h2 className="comments-title">COMMENTS ({comments.length})</h2>
+            <h2 className="comments-title">COMMENTS ({mockComments.length})</h2>
             <button className="sign-in-comment-btn">SIGN IN TO COMMENT</button>
           </div>
 
           <div className="comments-list">
-            {comments.map(comment => (
+            {mockComments.map(comment => (
               <div key={comment.id} className="comment-item">
                 <div className="comment-user-info">
                   <div className="comment-avatar">{comment.avatar}</div>
@@ -214,3 +232,4 @@ export default function BookDetails() {
     </div>
   )
 }
+
