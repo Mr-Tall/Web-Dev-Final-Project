@@ -102,7 +102,14 @@ export default function BookDetails() {
         id: `${review.bookIsbn}-${index}`,
         rating,
         createdAt: timestamp,
-        relativeTime: toRelativeTime(timestamp)
+        relativeTime: toRelativeTime(timestamp),
+        replies: (review.replies || []).map((reply, replyIndex) => ({
+          id: reply.id || `${review.bookIsbn}-${index}-reply-${replyIndex}`,
+          author: reply.author || 'Reader',
+          body: reply.body || '',
+          timestamp: reply.timestamp || toRelativeTime(timestamp),
+          likes: reply.likes || 0
+        }))
       }
     })
   }, [book.isbn])
@@ -112,6 +119,11 @@ export default function BookDetails() {
     rating: '4.0',
     body: ''
   })
+  const [hoverRating, setHoverRating] = useState(null)
+  const [activeThread, setActiveThread] = useState(null)
+  const [replyDrafts, setReplyDrafts] = useState({})
+  const [heartedReviews, setHeartedReviews] = useState({})
+  const [heartedReplies, setHeartedReplies] = useState({})
 
   const popularReviews = useMemo(() => {
     return [...userReviews].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 3)
@@ -126,9 +138,96 @@ export default function BookDetails() {
     setReviewForm(prev => ({ ...prev, [name]: value }))
   }
 
+  const ratingAsNumber = parseFloat(reviewForm.rating) || 0
+  const starPickerValue = hoverRating ?? ratingAsNumber
+
+  const handleStarSelect = (value) => {
+    setReviewForm(prev => ({ ...prev, rating: value.toFixed(1) }))
+    setHoverRating(null)
+  }
+
+  const ensureAuth = () => {
+    if (!isAuthenticated) {
+      navigate('/sign-in', { state: { from: location.pathname } })
+      return false
+    }
+    return true
+  }
+
+  const handleHeartReview = (reviewId) => {
+    if (!ensureAuth()) return
+    const alreadyHearted = heartedReviews[reviewId]
+    setUserReviews(prev =>
+      prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              likes: Math.max(0, (review.likes || 0) + (alreadyHearted ? -1 : 1))
+            }
+          : review
+      )
+    )
+    setHeartedReviews(prev => ({ ...prev, [reviewId]: !alreadyHearted }))
+  }
+
+  const handleToggleThread = (reviewId) => {
+    if (!ensureAuth()) return
+    setActiveThread(prev => (prev === reviewId ? null : reviewId))
+  }
+
+  const handleReplyDraftChange = (reviewId, text) => {
+    setReplyDrafts(prev => ({ ...prev, [reviewId]: text }))
+  }
+
+  const handleReplySubmit = (event, reviewId) => {
+    event.preventDefault()
+    if (!ensureAuth()) return
+    const text = replyDrafts[reviewId]?.trim()
+    if (!text) return
+
+    const reply = {
+      id: `${reviewId}-reply-${Date.now()}`,
+      author: user.name,
+      body: text,
+      timestamp: 'moments ago'
+    }
+
+    setUserReviews(prev =>
+      prev.map(review =>
+        review.id === reviewId
+          ? { ...review, replies: [...(review.replies || []), reply] }
+          : review
+      )
+    )
+    setReplyDrafts(prev => ({ ...prev, [reviewId]: '' }))
+  }
+
+  const handleHeartReply = (reviewId, replyId) => {
+    if (!ensureAuth()) return
+    const alreadyHearted = heartedReplies[replyId]
+    setUserReviews(prev =>
+      prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              replies: review.replies.map(reply =>
+                reply.id === replyId
+                  ? {
+                      ...reply,
+                      likes: Math.max(0, (reply.likes || 0) + (alreadyHearted ? -1 : 1))
+                    }
+                  : reply
+              )
+            }
+          : review
+      )
+    )
+    setHeartedReplies(prev => ({ ...prev, [replyId]: !alreadyHearted }))
+  }
+
   const handleReviewSubmit = (event) => {
     event.preventDefault()
-    if (!isAuthenticated || !reviewForm.body.trim()) return
+    if (!ensureAuth() || !reviewForm.body.trim()) return
 
     const createdAt = new Date().toISOString()
     const ratingValue = parseFloat(reviewForm.rating)
@@ -272,21 +371,70 @@ export default function BookDetails() {
                       </div>
                       <p className="review-body">{review.review}</p>
                       <div className="review-actions">
-                        <button className="review-action">
+                        <button
+                          type="button"
+                          className="review-action"
+                          onClick={() => handleToggleThread(review.id)}
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/>
                           </svg>
-                          {review.comments || 0}
+                          {review.replies?.length || 0}
                         </button>
-                        <button className="review-action">
+                        <button
+                          type="button"
+                          className="review-action"
+                          onClick={() => handleHeartReview(review.id)}
+                          aria-pressed={heartedReviews[review.id] || false}
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                           </svg>
                           {review.likes || 0}
                         </button>
-                        <button className="review-action dot">•</button>
-                        <span className="review-meta muted">Best Track: {book.title.split(' ')[0]}</span>
                       </div>
+                      {activeThread === review.id && (
+                        <div className="review-thread">
+                          <div className="thread-replies">
+                            {review.replies?.length ? (
+                              review.replies.map((reply) => (
+                                <div key={reply.id} className="thread-reply">
+                                  <div className="thread-reply-meta">
+                                    <span className="thread-reply-author">{reply.author}</span>
+                                    <span className="thread-reply-time">{reply.timestamp}</span>
+                                  </div>
+                                  <p className="thread-reply-body">{reply.body}</p>
+                                  <div className="thread-reply-actions">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHeartReply(review.id, reply.id)}
+                                      aria-pressed={heartedReplies[reply.id] || false}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                      </svg>
+                                      {reply.likes || 0}
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="thread-empty">No replies yet. Start the conversation.</p>
+                            )}
+                          </div>
+                          <form className="thread-form" onSubmit={(event) => handleReplySubmit(event, review.id)}>
+                            <textarea
+                              rows={2}
+                              placeholder="Add a reply"
+                              value={replyDrafts[review.id] || ''}
+                              onChange={(event) => handleReplyDraftChange(review.id, event.target.value)}
+                            />
+                            <button type="submit" disabled={!replyDrafts[review.id]?.trim()}>
+                              Reply
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -316,6 +464,24 @@ export default function BookDetails() {
                       </label>
                       <div className="composer-meta">0 – 5</div>
                     </div>
+                  <div className="review-star-picker" role="radiogroup" aria-label="Select rating">
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const state = starPickerValue >= value ? 'full' : starPickerValue >= value - 0.5 ? 'half' : 'empty'
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`picker-star ${state}`}
+                          aria-label={`${value} star${value > 1 ? 's' : ''}`}
+                          onClick={() => handleStarSelect(value)}
+                          onMouseEnter={() => setHoverRating(value)}
+                          onMouseLeave={() => setHoverRating(null)}
+                        >
+                          ★
+                        </button>
+                      )
+                    })}
+                  </div>
                   <textarea
                     name="body"
                     placeholder="Share your read. What resonated? What didn’t?"
@@ -351,19 +517,70 @@ export default function BookDetails() {
                       </div>
                       <p className="review-body">{review.review}</p>
                       <div className="review-actions">
-                        <button className="review-action">
+                        <button
+                          type="button"
+                          className="review-action"
+                          onClick={() => handleToggleThread(review.id)}
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/>
                           </svg>
-                          {review.comments || 0}
+                          {review.replies?.length || 0}
                         </button>
-                        <button className="review-action">
+                        <button
+                          type="button"
+                          className="review-action"
+                          onClick={() => handleHeartReview(review.id)}
+                          aria-pressed={heartedReviews[review.id] || false}
+                        >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                           </svg>
                           {review.likes || 0}
                         </button>
                       </div>
+                      {activeThread === review.id && (
+                        <div className="review-thread">
+                          <div className="thread-replies">
+                            {review.replies?.length ? (
+                              review.replies.map((reply) => (
+                                <div key={reply.id} className="thread-reply">
+                                  <div className="thread-reply-meta">
+                                    <span className="thread-reply-author">{reply.author}</span>
+                                    <span className="thread-reply-time">{reply.timestamp}</span>
+                                  </div>
+                                  <p className="thread-reply-body">{reply.body}</p>
+                                  <div className="thread-reply-actions">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleHeartReply(review.id, reply.id)}
+                                      aria-pressed={heartedReplies[reply.id] || false}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                      </svg>
+                                      {reply.likes || 0}
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="thread-empty">No replies yet. Start the conversation.</p>
+                            )}
+                          </div>
+                          <form className="thread-form" onSubmit={(event) => handleReplySubmit(event, review.id)}>
+                            <textarea
+                              rows={2}
+                              placeholder="Add a reply"
+                              value={replyDrafts[review.id] || ''}
+                              onChange={(event) => handleReplyDraftChange(review.id, event.target.value)}
+                            />
+                            <button type="submit" disabled={!replyDrafts[review.id]?.trim()}>
+                              Reply
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}

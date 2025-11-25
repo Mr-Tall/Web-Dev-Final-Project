@@ -620,6 +620,12 @@
   cursor: default;
 }
 
+.review-action[aria-pressed='true'] svg {
+  color: #f5c451;
+  stroke: #f5c451;
+  fill: #f5c451;
+}
+
 .review-composer {
   display: flex;
   flex-direction: column;
@@ -666,6 +672,133 @@
 
 .reviews-banner-btn.primary {
   align-self: flex-start;
+}
+
+.review-star-picker {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.picker-star {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.picker-star.full {
+  color: #f5c451;
+}
+
+.picker-star.half {
+  background: linear-gradient(90deg, #f5c451 50%, rgba(0, 0, 0, 0.25) 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.picker-star:hover {
+  transform: scale(1.1);
+}
+
+.review-thread {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.thread-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.thread-reply {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.thread-reply-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.thread-reply-author {
+  font-weight: 600;
+  color: #111;
+}
+
+.thread-reply-body {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.thread-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+
+.thread-reply-actions button {
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.thread-reply-actions button[aria-pressed='true'] svg {
+  color: #f5c451;
+  stroke: #f5c451;
+  fill: #f5c451;
+}
+
+.thread-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.thread-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.thread-form textarea {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0.65rem;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.thread-form button {
+  align-self: flex-end;
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(90deg, #ffe7b2, var(--gold));
+  color: #2f1a11;
+  cursor: pointer;
+}
+
+.thread-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

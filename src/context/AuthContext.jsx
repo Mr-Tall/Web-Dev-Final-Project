@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useCallback, useState } from 'react'
 import APP_CONFIG from '../config/constants'
-import usersData from '../data/config/users.json'
+import sampleUsersData from '../data/config/users.sample.json'
 
 const AuthContext = createContext(null)
 
@@ -20,6 +20,18 @@ function delay(ms = 450) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getStoredUser())
+
+  const usersData = useMemo(() => {
+    const envUsers = import.meta.env.VITE_USERS_JSON
+    if (envUsers) {
+      try {
+        return JSON.parse(envUsers)
+      } catch (error) {
+        console.warn('Invalid VITE_USERS_JSON value', error)
+      }
+    }
+    return sampleUsersData
+  }, [])
 
   const signIn = useCallback(async (email, password) => {
     await delay()
