@@ -1,13 +1,14 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import booksData from '../../data/books/books.json'
 import TrendingSection from '../../components/advanced-search/TrendingSection/TrendingSection'
 import LibrarySection from '../../components/advanced-search/LibrarySection/LibrarySection'
 import SearchForm from '../../components/advanced-search/SearchForm/SearchForm'
+import { useBooks } from '../../context/BooksContext'
 import styles from './AdvancedSearch.module.css'
 
 function AdvancedSearch() {
   const location = useLocation()
+  const { books: booksData } = useBooks()
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     category: [],
@@ -51,7 +52,7 @@ function AdvancedSearch() {
         image: book.image
       }
     })
-  }, [])
+  }, [booksData])
 
   const handleSearch = useCallback((term) => {
     setSearchTerm(term)

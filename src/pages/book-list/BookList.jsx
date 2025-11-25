@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import booksData from '../../data/books/books.json'
 import criticSourcesData from '../../data/reviews/criticSources.json'
 import { formatDate } from '../../utils/bookUtils'
+import { useBooks } from '../../context/BooksContext'
 import './BookList.css'
 
 function BookList() {
@@ -14,6 +14,8 @@ function BookList() {
   const [yearFilter, setYearFilter] = useState('2025')
 
   // Get books based on list type
+  const { books: booksData } = useBooks()
+
   const books = useMemo(() => {
     let filtered = [...booksData]
     
@@ -34,7 +36,7 @@ function BookList() {
     filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
 
     return filtered
-  }, [yearFilter, genreFilter])
+  }, [yearFilter, genreFilter, booksData])
 
   // Generate critic scores for books
   // TODO: Replace with API call to get real critic scores

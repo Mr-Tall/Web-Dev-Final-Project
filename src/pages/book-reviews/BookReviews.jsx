@@ -1,14 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import booksData from '../../data/books/books.json'
 import APP_CONFIG from '../../config/constants'
 import BookFilterModal from '../../components/filters/BookFilterModal'
 import TopFilterModal from '../../components/filters/TopFilterModal'
 import TimeRangeModal from '../../components/filters/TimeRangeModal'
+import { useBooks } from '../../context/BooksContext'
 import './BookReviews.css'
 
 function BookReviews() {
   const navigate = useNavigate()
+  const { books: booksData } = useBooks()
   const [timeFilter, setTimeFilter] = useState('all-time')
   const [viewMode, setViewMode] = useState('list')
   const [currentPage, setCurrentPage] = useState(1)
@@ -54,7 +55,7 @@ function BookReviews() {
         formattedRatingCount: ratingCount >= 1000 ? `${(ratingCount / 1000).toFixed(0)}k` : ratingCount.toString()
       }
     })
-  }, [])
+  }, [booksData])
 
   // Filter books by time period
   const filteredByTime = useMemo(() => {

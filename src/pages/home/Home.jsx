@@ -1,16 +1,17 @@
 import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import booksData from '../../data/books/books.json'
 import resourcesData from '../../data/resources/resources.json'
 import userReviewsData from '../../data/reviews/userReviews.json'
 import publicationsData from '../../data/config/publications.json'
 import genresData from '../../data/config/genres.json'
 import APP_CONFIG from '../../config/constants'
 import AIAssistant from '../../components/common/AIAssistant'
+import { useBooks } from '../../context/BooksContext'
 import './Home.css'
 
 function Home() {
   const navigate = useNavigate()
+  const { books: booksData, loading: booksLoading } = useBooks()
 
   // Memoize navigation handlers
   const handleNavigate = useCallback((path) => {
@@ -20,13 +21,25 @@ function Home() {
   // Memoize sorted book arrays
   const newReleases = useMemo(() => 
     [...booksData].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate)),
-    []
+    [booksData]
   )
 
   const trendingBooks = useMemo(() => 
     [...booksData].sort((a, b) => b.rating - a.rating),
-    []
+    [booksData]
   )
+
+  const currentYear = new Date().getFullYear()
+
+  const anticipatedBooks = useMemo(() => {
+    const byYear = trendingBooks.filter((book) => {
+      const year = new Date(book.releaseDate).getFullYear()
+      const normalizedYear = Number.isNaN(year) ? currentYear : year
+      return normalizedYear === currentYear
+    })
+    if (byYear.length >= 6) return byYear
+    return trendingBooks
+  }, [trendingBooks, currentYear])
 
 
 
@@ -175,7 +188,7 @@ function Home() {
               </button>
             </div>
             <div className="anticipated-grid">
-              {trendingBooks.slice(0, 6).map((book, index) => {
+              {anticipatedBooks.slice(0, 6).map((book, index) => {
                 const releaseDate = new Date(book.releaseDate)
                 const formattedDate = releaseDate.toLocaleDateString('en-US', { 
                   month: 'short', 
