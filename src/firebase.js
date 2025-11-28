@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Our Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCmBS0xFVhEeoU5qgUsaPUtfp0xX8k_aWw",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "bc-library-catalog.firebaseapp.com",
   projectId: "bc-library-catalog",
   storageBucket: "bc-library-catalog.firebasestorage.app",
