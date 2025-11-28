@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import booksData from '../data/books.json'
+import { useBooks } from '../BooksContext'
 import SearchBar from '../components/SearchBar'
 import AIAssistant from '../components/AIAssistant'
 import BookSection from '../components/BookSection'
@@ -8,42 +8,87 @@ import './Home.css'
 
 function Home() {
   const navigate = useNavigate()
+  const { books, loading, error, searchBooks } = useBooks()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [showResults, setShowResults] = useState(false)
+  const searchTimeoutRef = useRef(null)
 
   // recently added books
-  const newReleases = [...booksData]
-    .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+  const newReleases = useMemo(() => {
+    return [...books]
+      .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
+  }, [books])
 
   // trending books
-  const trendingBooks = [...booksData]
-    .sort((a, b) => b.rating - a.rating)
+  const trendingBooks = useMemo(() => {
+    return [...books]
+      .sort((a, b) => b.rating - a.rating)
+  }, [books])
 
   // personal recs
-  const recommendations = [...booksData]
-    .sort((a, b) => b.rating - a.rating)
+  const recommendations = useMemo(() => {
+    return [...books]
+      .sort((a, b) => b.rating - a.rating)
+  }, [books])
 
-  // handle search
-  const handleSearch = (query) => {
-    setSearchQuery(query)
-    if (query.trim() === '') {
+  // Debounced search effect
+  useEffect(() => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (searchQuery.trim() === '') {
       setSearchResults([])
       setShowResults(false)
       return
     }
 
-    const results = booksData.filter(book => {
-      const lowerQuery = query.toLowerCase()
-      return (
-        book.title.toLowerCase().includes(lowerQuery) ||
-        book.author.toLowerCase().includes(lowerQuery) ||
-        book.isbn.includes(query)
-      )
-    }).slice(0, 5)
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchBooks(searchQuery, 5)
+        setSearchResults(results)
+        setShowResults(true)
+      } catch (err) {
+        console.error('Search error:', err)
+        setSearchResults([])
+        setShowResults(false)
+      }
+    }, 300) // 300ms debounce
 
-    setSearchResults(results)
-    setShowResults(true)
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchQuery, searchBooks])
+
+  // handle search input change
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+  }
+
+  if (loading) {
+    return (
+      <div className="home">
+        <div className="home-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <p style={{ color: 'var(--white)', fontSize: '1.2rem' }}>Loading books...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="home">
+        <div className="home-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column', gap: '1rem' }}>
+          <p style={{ color: 'var(--gold)', fontSize: '1.2rem' }}>Error loading books</p>
+          <p style={{ color: 'var(--white)', fontSize: '1rem' }}>{error}</p>
+        </div>
+      </div>
+    )
   }
 
   return (

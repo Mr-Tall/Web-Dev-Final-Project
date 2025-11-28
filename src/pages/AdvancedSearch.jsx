@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useMemo } from 'react'
-import booksData from '../data/books.json'
+import { useBooks } from '../BooksContext'
 import TrendingSection from '../components/advanced-search/TrendingSection/TrendingSection'
 import LibrarySection from '../components/advanced-search/LibrarySection/LibrarySection'
 import SearchForm from '../components/advanced-search/SearchForm/SearchForm'
 import styles from './AdvancedSearch.module.css'
 
 function AdvancedSearch() {
+  const { books, loading, error } = useBooks()
   const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     category: [],
@@ -16,7 +17,7 @@ function AdvancedSearch() {
 
   // Map books data to include availability and normalize genre
   const allBooks = useMemo(() => {
-    return booksData.map((book, index) => ({
+    return books.map((book, index) => ({
       id: index + 1,
       title: book.title,
       author: book.author,
@@ -27,7 +28,7 @@ function AdvancedSearch() {
       releaseDate: book.releaseDate,
       image: book.image
     }))
-  }, [])
+  }, [books])
 
   const handleSearch = useCallback((term) => {
     setSearchTerm(term)
@@ -111,6 +112,27 @@ function AdvancedSearch() {
       .sort((a, b) => (b.rating || 0) - (a.rating || 0))
       .slice(0, 5)
   }, [allBooks])
+
+  if (loading) {
+    return (
+      <div className={styles.advancedSearch}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <p style={{ color: 'var(--white)', fontSize: '1.2rem' }}>Loading books...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.advancedSearch}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column', gap: '1rem' }}>
+          <p style={{ color: 'var(--gold)', fontSize: '1.2rem' }}>Error loading books</p>
+          <p style={{ color: 'var(--white)', fontSize: '1rem' }}>{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.advancedSearch}>
