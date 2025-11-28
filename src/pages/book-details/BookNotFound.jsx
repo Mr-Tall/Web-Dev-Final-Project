@@ -67,7 +67,7 @@ export default function BookNotFound() {
   }, [mockBook.isbn])
 
   const formattedDate = formatDate(mockBook.releaseDate)
-  const readTimeMinutes = calculateReadTime()
+  const readTimeMinutes = calculateReadTime(APP_CONFIG.DEFAULT_ESTIMATED_PAGES)
   const description = generateBookDescription(mockBook)
 
   // Mock comments

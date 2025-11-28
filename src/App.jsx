@@ -7,29 +7,37 @@ import BookDetails from './pages/book-details/BookDetails'
 import BookNotFound from './pages/book-details/BookNotFound'
 import BookReviews from './pages/book-reviews'
 import ResourcesPage from './pages/resources'
-import MyLibrary from './pages/my-library'
-import SignIn from './pages/auth'
 import { About, FAQ, Contact, Privacy } from './pages/info'
 import BookList from './pages/book-list'
-import { AuthProvider } from './context/AuthContext'
 import { BooksProvider, useBooks } from './context/BooksContext'
+import { isbnMatches } from './utils/bookUtils'
 import './App.css'
 
 // Component to check if book exists and render appropriate component
 function BookDetailsWithFallback() {
   const { isbn } = useParams()
   
-  const { books } = useBooks()
+  const { books, loading } = useBooks()
 
   const bookExists = useMemo(() => {
+    // Wait for books to load before checking
+    if (loading || !books || books.length === 0) return null
     if (!isbn) return false
-    
-    const normalizedIsbn = isbn.replace(/-/g, '')
-    return books.some(b => {
-      const bookIsbn = b.isbn.replace(/-/g, '')
-      return b.isbn === isbn || bookIsbn === normalizedIsbn
-    })
-  }, [isbn, books])
+    return books.some(b => isbnMatches(b.isbn, isbn))
+  }, [isbn, books, loading])
+  
+  // Show loading state
+  if (loading || bookExists === null) {
+    return (
+      <div className="book-details-page">
+        <div className="book-details-container">
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--white)' }}>
+            <p>Loading book details...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   
   return bookExists ? <BookDetails /> : <BookNotFound />
 }
@@ -37,29 +45,25 @@ function BookDetailsWithFallback() {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <BooksProvider>
-          <div className="App">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/advanced-search" element={<AdvancedSearch />} />
-              <Route path="/book/:id" element={<BookDetails />} />
-              <Route path="/book-details" element={<BookDetails />} />
-              <Route path="/book/isbn/:isbn" element={<BookDetailsWithFallback />} />
-              <Route path="/book-reviews" element={<BookReviews />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/my-library" element={<MyLibrary />} />
-              <Route path="/sign-in" element={<SignIn />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/book-list/:listType" element={<BookList />} />
-            </Routes>
-          </div>
-        </BooksProvider>
-      </AuthProvider>
+      <BooksProvider>
+        <div className="App">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/advanced-search" element={<AdvancedSearch />} />
+            <Route path="/book/:id" element={<BookDetails />} />
+            <Route path="/book-details" element={<BookDetails />} />
+            <Route path="/book/isbn/:isbn" element={<BookDetailsWithFallback />} />
+            <Route path="/book-reviews" element={<BookReviews />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/book-list/:listType" element={<BookList />} />
+          </Routes>
+        </div>
+      </BooksProvider>
     </Router>
   )
 }

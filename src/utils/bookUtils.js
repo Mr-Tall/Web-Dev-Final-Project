@@ -46,3 +46,23 @@ export const generateBookDescription = (book) => {
   return `${book.title} is a timeless classic that captures the essence of ${book.genre.toLowerCase()} literature. Written by the acclaimed author ${book.author}, this work explores themes of human experience, society, and the complexities of life. Through its vivid prose and unforgettable characters, this novel continues to resonate with readers across generations.`
 }
 
+/**
+ * Normalize ISBN by removing dashes for comparison
+ * @param {string} isbn - ISBN string (may contain dashes)
+ * @returns {string} Normalized ISBN without dashes
+ */
+export const normalizeIsbn = (isbn) => {
+  return isbn ? isbn.replace(/-/g, '') : ''
+}
+
+/**
+ * Check if two ISBNs match (handles dashes)
+ * @param {string} isbn1 - First ISBN
+ * @param {string} isbn2 - Second ISBN
+ * @returns {boolean} True if ISBNs match
+ */
+export const isbnMatches = (isbn1, isbn2) => {
+  if (!isbn1 || !isbn2) return false
+  return normalizeIsbn(isbn1) === normalizeIsbn(isbn2) || isbn1 === isbn2
+}
+

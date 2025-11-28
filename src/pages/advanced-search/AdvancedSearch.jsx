@@ -77,49 +77,45 @@ function AdvancedSearch() {
     })
   }, [])
 
-  // Filter books based on search term and filters
+  // Filter books based on search term and filters - optimized single pass
   const filteredBooks = useMemo(() => {
-    let filtered = allBooks
+    const searchTermTrimmed = searchTerm.trim()
+    const lowerSearch = searchTermTrimmed ? searchTermTrimmed.toLowerCase() : ''
+    const hasCategoryFilter = filters.category.length > 0
+    const hasAvailabilityFilter = filters.availability.length > 0
+    const hasInStock = filters.availability.includes('in-stock')
+    const hasNotInStock = filters.availability.includes('not-in-stock')
 
-    // Apply search term filter
-    if (searchTerm.trim()) {
-      const lowerSearch = searchTerm.toLowerCase()
-      filtered = filtered.filter(book => 
-        book.title.toLowerCase().includes(lowerSearch) ||
-        book.author.toLowerCase().includes(lowerSearch) ||
-        book.isbn.includes(searchTerm)
-      )
-    }
+    // Single pass filter for better performance
+    return allBooks.filter(book => {
+      // Search filter
+      if (lowerSearch) {
+        const matchesSearch = 
+          book.title.toLowerCase().includes(lowerSearch) ||
+          book.author.toLowerCase().includes(lowerSearch) ||
+          book.isbn.includes(searchTermTrimmed)
+        if (!matchesSearch) return false
+      }
 
-    // Apply category filter
-    if (filters.category.length > 0) {
-      filtered = filtered.filter(book => {
+      // Category filter
+      if (hasCategoryFilter) {
         const bookGenre = book.genre || 'fiction'
-        return filters.category.some(cat => {
+        const matchesCategory = filters.category.some(cat => {
           if (cat === 'fiction') return bookGenre === 'fiction'
           if (cat === 'non-fiction') return bookGenre === 'non-fiction'
           return bookGenre === cat
         })
-      })
-    }
+        if (!matchesCategory) return false
+      }
 
-    // Apply availability filter
-    if (filters.availability.length > 0) {
-      filtered = filtered.filter(book => {
-        if (filters.availability.includes('in-stock')) {
-          return book.availability > 0
-        }
-        if (filters.availability.includes('not-in-stock')) {
-          return book.availability === 0
-        }
-        return true
-      })
-    }
+      // Availability filter
+      if (hasAvailabilityFilter) {
+        if (hasInStock && book.availability === 0) return false
+        if (hasNotInStock && book.availability > 0) return false
+      }
 
-    // Note: languages and age filters are available in the UI but not yet implemented
-    // in the filtering logic as the books data doesn't include these fields yet
-
-    return filtered
+      return true
+    })
   }, [allBooks, searchTerm, filters])
 
   // Get trending books (top rated)

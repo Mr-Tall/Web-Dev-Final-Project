@@ -1,5 +1,6 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { formatDate } from '../../utils/bookUtils'
 import './BookSection.css'
 
 function BookSection({ title, books }) {
@@ -11,13 +12,21 @@ function BookSection({ title, books }) {
 
   const displayedBooks = useMemo(() => books.slice(0, 8), [books])
 
+  // Memoize formatted dates to avoid recalculation on each render
+  const booksWithFormattedDates = useMemo(() => {
+    return displayedBooks.map(book => ({
+      ...book,
+      formattedDate: formatDate(book.releaseDate, { month: 'long', day: 'numeric', year: 'numeric' })
+    }))
+  }, [displayedBooks])
+
   if (books.length === 0) return null
 
   return (
     <section className="book-section">
       <h2 className="section-title">{title}</h2>
       <div className="books-grid">
-        {displayedBooks.map((book) => (
+        {booksWithFormattedDates.map((book) => (
           <div 
             key={book.isbn || book.id} 
             className="book-card-large"
@@ -38,6 +47,7 @@ function BookSection({ title, books }) {
                 <img 
                   src={book.image} 
                   alt={`${book.title} cover`}
+                  loading="lazy"
                   onError={(e) => {
                     e.target.style.display = 'none';
                   }}
@@ -53,7 +63,7 @@ function BookSection({ title, books }) {
             <div className="book-card-body">
               <p className="book-card-author">by {book.author}</p>
               <p className="book-card-date">
-                Released: {new Date(book.releaseDate).toLocaleDateString()}
+                Released: {book.formattedDate}
               </p>
               <p className="book-card-isbn">ISBN: {book.isbn}</p>
               <span className="book-card-genre">{book.genre}</span>
@@ -65,5 +75,5 @@ function BookSection({ title, books }) {
   )
 }
 
-export default BookSection
+export default memo(BookSection)
 

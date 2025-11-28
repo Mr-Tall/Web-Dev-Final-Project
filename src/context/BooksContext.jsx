@@ -1,11 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import fetchBooksCatalog from '../services/booksApi'
-import localBooks from '../data/books/books.json'
 
 const BooksContext = createContext(null)
 
 export function BooksProvider({ children }) {
-  const [books, setBooks] = useState(localBooks)
+  const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -14,15 +13,16 @@ export function BooksProvider({ children }) {
     async function loadBooks() {
       try {
         const fetched = await fetchBooksCatalog()
-        if (active && fetched.length) {
+        if (active && fetched && fetched.length > 0) {
           setBooks(fetched)
         }
       } catch (err) {
         if (active) {
+          console.error('Failed to load books:', err)
           setError(err.message || 'Unable to load catalog')
         }
       } finally {
-          if (active) setLoading(false)
+        if (active) setLoading(false)
       }
     }
     loadBooks()

@@ -17,12 +17,6 @@ export const APP_CONFIG = {
   // Browse options
   BROWSE_OPTIONS: ['Decade', 'Year', 'Month', 'Week'],
   
-  // Time range options
-  TIME_RANGE_OPTIONS: ['All-time', 'This Year', 'Last Year', 'Custom Range'],
-  
-  // Filter options
-  BOOK_FORMATS: ['Books', 'Journals', 'Articles'],
-  
   // Pagination
   ITEMS_PER_PAGE: 25,
   

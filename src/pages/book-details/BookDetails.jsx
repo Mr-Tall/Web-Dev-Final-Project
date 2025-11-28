@@ -2,8 +2,7 @@ import { useState, useMemo } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import userReviewsData from '../../data/reviews/userReviews.json'
 import APP_CONFIG from '../../config/constants'
-import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription } from '../../utils/bookUtils'
-import { useAuth } from '../../context/AuthContext'
+import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches } from '../../utils/bookUtils'
 import { useBooks } from '../../context/BooksContext'
 import './BookDetails.css'
 
@@ -28,12 +27,14 @@ const toRelativeTime = (dateString) => {
   return `${diffYears}y`
 }
 
+// Memoize star state calculation to avoid recalculation
 const buildStarState = (rating) => {
   const stars = []
+  const ratingNum = parseFloat(rating) || 0
   for (let i = 1; i <= 5; i += 1) {
-    if (rating >= i) {
+    if (ratingNum >= i) {
       stars.push('full')
-    } else if (rating >= i - 0.5) {
+    } else if (ratingNum >= i - 0.5) {
       stars.push('half')
     } else {
       stars.push('empty')
@@ -46,21 +47,21 @@ export default function BookDetails() {
   const { id, isbn } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuth()
-  const { books } = useBooks()
+  const { books, loading } = useBooks()
 
   // Find the book by ID (using ISBN or index)
   const { book, bookNotFound } = useMemo(() => {
+    // If books are still loading, don't mark as not found yet
+    if (loading || !books || books.length === 0) {
+      return { book: null, bookNotFound: false, isLoading: true }
+    }
+
     // Check if we have ISBN in params
     const bookIdentifier = isbn || id || location.pathname.split('/').pop()
     
     if (bookIdentifier) {
       // Try to find by ISBN first (handle with or without dashes)
-      const foundByIsbn = books.find(b => {
-        const bookIsbn = b.isbn.replace(/-/g, '')
-        const searchIsbn = bookIdentifier.replace(/-/g, '')
-        return b.isbn === bookIdentifier || bookIsbn === searchIsbn
-      })
+      const foundByIsbn = books.find(b => isbnMatches(b.isbn, bookIdentifier))
       if (foundByIsbn) return { book: foundByIsbn, bookNotFound: false }
       
       // Otherwise try by index
@@ -69,20 +70,37 @@ export default function BookDetails() {
         return { book: books[index], bookNotFound: false }
       }
     }
-    // Book not found
+    // Book not found (only after books have loaded)
     return { book: null, bookNotFound: true }
-  }, [id, isbn, location.pathname, books])
+  }, [id, isbn, location.pathname, books, loading])
 
-  // If book not found, this shouldn't happen as App.jsx handles routing
-  // But just in case, return null
+  // Show loading state while books are loading
+  if (loading || !books || books.length === 0) {
+    return (
+      <div className="book-details-page">
+        <div className="book-details-container">
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--white)' }}>
+            <p>Loading book details...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If book not found after loading, return null (BookDetailsWithFallback will show BookNotFound)
   if (bookNotFound || !book) {
     return null
   }
 
-  // Calculate read time and format date
-  const readTimeMinutes = calculateReadTime()
+  // Calculate read time: use provided value, or calculate from pages, or use default
+  const readTimeMinutes = useMemo(() => {
+    if (book.readTimeMinutes) return book.readTimeMinutes
+    if (book.pages) return Math.round(book.pages * 1.25)
+    return calculateReadTime() // Uses default pages
+  }, [book.readTimeMinutes, book.pages])
+  
   const formattedDate = formatDate(book.releaseDate)
-  const description = generateBookDescription(book)
+  const description = book.description || generateBookDescription(book)
 
   // Generate library availability (mock data based on book)
   // TODO: Replace with API call to get real availability
@@ -91,8 +109,8 @@ export default function BookDetails() {
   }, [book.isbn])
 
   const reviewSeedData = useMemo(() => {
-    const normalizedIsbn = book.isbn.replace(/-/g, '')
-    const matches = userReviewsData.filter(entry => entry.bookIsbn.replace(/-/g, '') === normalizedIsbn)
+    const normalizedIsbn = normalizeIsbn(book.isbn)
+    const matches = userReviewsData.filter(entry => normalizeIsbn(entry.bookIsbn) === normalizedIsbn)
     const fallback = matches.length ? matches : userReviewsData.slice(0, 3)
     return fallback.map((review, index) => {
       const rating = parseFloat((review.rating || 4).toFixed(1))
@@ -146,16 +164,7 @@ export default function BookDetails() {
     setHoverRating(null)
   }
 
-  const ensureAuth = () => {
-    if (!isAuthenticated) {
-      navigate('/sign-in', { state: { from: location.pathname } })
-      return false
-    }
-    return true
-  }
-
   const handleHeartReview = (reviewId) => {
-    if (!ensureAuth()) return
     const alreadyHearted = heartedReviews[reviewId]
     setUserReviews(prev =>
       prev.map(review =>
@@ -171,7 +180,6 @@ export default function BookDetails() {
   }
 
   const handleToggleThread = (reviewId) => {
-    if (!ensureAuth()) return
     setActiveThread(prev => (prev === reviewId ? null : reviewId))
   }
 
@@ -181,13 +189,12 @@ export default function BookDetails() {
 
   const handleReplySubmit = (event, reviewId) => {
     event.preventDefault()
-    if (!ensureAuth()) return
     const text = replyDrafts[reviewId]?.trim()
     if (!text) return
 
     const reply = {
       id: `${reviewId}-reply-${Date.now()}`,
-      author: user.name,
+      author: 'Reader',
       body: text,
       timestamp: 'moments ago'
     }
@@ -203,7 +210,6 @@ export default function BookDetails() {
   }
 
   const handleHeartReply = (reviewId, replyId) => {
-    if (!ensureAuth()) return
     const alreadyHearted = heartedReplies[replyId]
     setUserReviews(prev =>
       prev.map(review =>
@@ -227,13 +233,13 @@ export default function BookDetails() {
 
   const handleReviewSubmit = (event) => {
     event.preventDefault()
-    if (!ensureAuth() || !reviewForm.body.trim()) return
+    if (!reviewForm.body.trim()) return
 
     const createdAt = new Date().toISOString()
     const ratingValue = parseFloat(reviewForm.rating)
     const entry = {
       id: `user-${Date.now()}`,
-      reviewer: user.name,
+      reviewer: 'Reader',
       rating: ratingValue,
       review: reviewForm.body.trim(),
       likes: 0,
@@ -287,15 +293,15 @@ export default function BookDetails() {
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Language:</span>
-                  <span className="spec-value">{APP_CONFIG.DEFAULT_LANGUAGE}</span>
+                  <span className="spec-value">{book.language || APP_CONFIG.DEFAULT_LANGUAGE}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Pages:</span>
-                  <span className="spec-value">{APP_CONFIG.DEFAULT_ESTIMATED_PAGES}</span>
+                  <span className="spec-value">{book.pages || APP_CONFIG.DEFAULT_ESTIMATED_PAGES}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Read Time*:</span>
-                  <span className="spec-value">{readTimeMinutes} minutes</span>
+                  <span className="spec-value">{readTimeMinutes ? `${readTimeMinutes} minutes` : 'Not available'}</span>
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">ISBN:</span>
@@ -307,7 +313,7 @@ export default function BookDetails() {
                 </div>
                 <div className="spec-item">
                   <span className="spec-label">Publisher:</span>
-                  <span className="spec-value">{APP_CONFIG.DEFAULT_PUBLISHER}</span>
+                  <span className="spec-value">{book.publisher || APP_CONFIG.DEFAULT_PUBLISHER}</span>
                 </div>
               </div>
             </div>
@@ -352,7 +358,7 @@ export default function BookDetails() {
               <div className="panel-header">
                 <p className="panel-eyebrow">Popular user reviews</p>
                 <button className="panel-link">View all</button>
-              </div>
+          </div>
               <div className="review-list">
                 {popularReviews.map((review) => (
                   <article key={review.id} className="review-entry">
@@ -362,8 +368,8 @@ export default function BookDetails() {
                         {buildStarState(review.rating).map((state, index) => (
                           <span key={index} className={`star ${state}`}>★</span>
                         ))}
-                      </div>
-                    </div>
+                  </div>
+                </div>
                     <div className="review-content">
                       <div className="review-row">
                         <p className="review-author">{review.reviewer}</p>
@@ -387,9 +393,9 @@ export default function BookDetails() {
                           onClick={() => handleHeartReview(review.id)}
                           aria-pressed={heartedReviews[review.id] || false}
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                          </svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
                           {review.likes || 0}
                         </button>
                       </div>
@@ -447,8 +453,7 @@ export default function BookDetails() {
                 <button className="panel-link">View all</button>
               </div>
 
-              {isAuthenticated && (
-                <form id="reviewComposer" className="review-composer" onSubmit={handleReviewSubmit}>
+              <form id="reviewComposer" className="review-composer" onSubmit={handleReviewSubmit}>
                     <div className="composer-row">
                       <label>
                         Rating
@@ -561,8 +566,8 @@ export default function BookDetails() {
                                       </svg>
                                       {reply.likes || 0}
                                     </button>
-                                  </div>
-                                </div>
+                </div>
+              </div>
                               ))
                             ) : (
                               <p className="thread-empty">No replies yet. Start the conversation.</p>
@@ -583,9 +588,9 @@ export default function BookDetails() {
                       )}
                     </div>
                   </article>
-                ))}
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
           </div>
         </section>
       </div>

@@ -1,9 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import resourcesData from '../../data/resources/resources.json'
-import userReviewsData from '../../data/reviews/userReviews.json'
-import publicationsData from '../../data/config/publications.json'
-import genresData from '../../data/config/genres.json'
 import APP_CONFIG from '../../config/constants'
 import AIAssistant from '../../components/common/AIAssistant'
 import { useBooks } from '../../context/BooksContext'
@@ -18,33 +15,13 @@ function Home() {
     navigate(path)
   }, [navigate])
 
-  // Memoize sorted book arrays
+  // Memoize sorted book arrays - optimize by sorting once and slicing
   const newReleases = useMemo(() => 
     [...booksData].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate)),
     [booksData]
   )
 
-  const trendingBooks = useMemo(() => 
-    [...booksData].sort((a, b) => b.rating - a.rating),
-    [booksData]
-  )
-
-  const currentYear = new Date().getFullYear()
-
-  const anticipatedBooks = useMemo(() => {
-    const byYear = trendingBooks.filter((book) => {
-      const year = new Date(book.releaseDate).getFullYear()
-      const normalizedYear = Number.isNaN(year) ? currentYear : year
-      return normalizedYear === currentYear
-    })
-    if (byYear.length >= 6) return byYear
-    return trendingBooks
-  }, [trendingBooks, currentYear])
-
-
-
   // Generate mock review counts for books (user scores out of 5)
-  // TODO: Replace with API call to get real user scores and counts
   // Using seed-based approach for stable values across renders
   const booksWithScores = useMemo(() => {
     return newReleases.map((book, index) => {
@@ -58,14 +35,9 @@ function Home() {
       }
     })
   }, [newReleases])
-  
-  // Map user reviews to books
-  const reviewsWithBooks = useMemo(() => {
-    return userReviewsData.map(review => {
-      const book = booksData.find(b => b.isbn === review.bookIsbn)
-      return { ...review, book }
-    }).filter(review => review.book) // Only include reviews for books that exist
-  }, [])
+
+  // Memoize sliced arrays to avoid recalculation
+  const displayedNewReleases = useMemo(() => booksWithScores.slice(0, 14), [booksWithScores])
 
   return (
     <div className="home">
@@ -85,7 +57,7 @@ function Home() {
             </div>
           </div>
           <div className="books-grid-aoty">
-            {booksWithScores.slice(0, 14).map((book, index) => (
+            {displayedNewReleases.map((book, index) => (
               <div 
                 key={book.isbn || index} 
                 className="book-card-aoty"
@@ -178,401 +150,6 @@ function Home() {
           </div>
         </section>
 
-        {/* HIGHLY ANTICIPATED Section with Sidebar */}
-        <section className="anticipated-section">
-          <div className="anticipated-main">
-            <div className="section-header-aoty">
-              <h2 className="section-title-aoty">HIGHLY ANTICIPATED BOOKS</h2>
-              <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
-                VIEW ALL
-              </button>
-            </div>
-            <div className="anticipated-grid">
-              {anticipatedBooks.slice(0, 6).map((book, index) => {
-                const releaseDate = new Date(book.releaseDate)
-                const formattedDate = releaseDate.toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric',
-                  year: 'numeric'
-                })
-                // Use seed-based approach for stable values
-                const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
-                const comments = APP_CONFIG.COMMENTS_MIN + ((seed * 3) % (APP_CONFIG.COMMENTS_MAX - APP_CONFIG.COMMENTS_MIN + 1))
-                const views = APP_CONFIG.VIEWS_MIN + ((seed * 5) % (APP_CONFIG.VIEWS_MAX - APP_CONFIG.VIEWS_MIN + 1))
-                
-                return (
-                  <div 
-                    key={book.isbn || index} 
-                    className="anticipated-card"
-                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
-                  >
-                    <div className="anticipated-cover">
-                      {book.image ? (
-                        <img src={book.image} alt={book.title} />
-                      ) : (
-                        <div className="anticipated-placeholder">
-                          <span>{book.title.charAt(0)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="anticipated-info">
-                      <p className="anticipated-author">{book.author}</p>
-                      <h3 className="anticipated-title">{book.title}</h3>
-                      <p className="anticipated-date">{formattedDate}</p>
-                      <div className="anticipated-stats">
-                        <span className="stat-item">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                          </svg>
-                          {comments}
-                        </span>
-                        <span className="stat-item">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                          </svg>
-                          {views}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="anticipated-sidebar">
-            <div className="sidebar-list">
-              <h3 className="sidebar-title">USERS' BEST</h3>
-              {trendingBooks.slice(0, 5).map((book, index) => {
-                // TODO: Replace with API call to get real user ratings
-                // Use seed-based approach for stable values
-                const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
-                const userRating = parseFloat((book.rating + ((seed % 8 - 4) * 0.05)).toFixed(1))
-                return (
-                  <div 
-                    key={book.isbn || index} 
-                    className="sidebar-item"
-                    onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
-                  >
-                    <div className="sidebar-image">
-                      {book.image ? (
-                        <img src={book.image} alt={book.title} />
-                      ) : (
-                        <div className="sidebar-placeholder">
-                          <span>{book.title.charAt(0)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="sidebar-content">
-                      <p className="sidebar-artist">{book.author}</p>
-                      <p className="sidebar-album">{book.title}</p>
-                    </div>
-                    <div className="sidebar-rating">{userRating}/5</div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* POPULAR NOW Section */}
-        <section className="popular-now-section">
-          <div className="section-header-aoty">
-            <h2 className="section-title-aoty">POPULAR NOW</h2>
-            <div className="section-header-links">
-              <button className="header-link active">BOOKS</button>
-              <button className="header-link" onClick={() => navigate('/advanced-search')}>
-                VIEW MORE
-              </button>
-            </div>
-          </div>
-          <div className="popular-scroll">
-            {trendingBooks.slice(0, 10).map((book, index) => (
-              <div 
-                key={book.isbn || index} 
-                className="popular-card"
-                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
-              >
-                <div className="popular-cover">
-                  {book.image ? (
-                    <img src={book.image} alt={book.title} />
-                  ) : (
-                    <div className="popular-placeholder">
-                      <span>{book.title.charAt(0)}</span>
-                    </div>
-                  )}
-                  {index < 2 && (
-                    <div className="popular-star-badge">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#ff8c00" stroke="#ff8c00">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* POPULAR USER REVIEWS Section */}
-        <section className="user-reviews-section">
-          <div className="section-header-aoty">
-            <h2 className="section-title-aoty">POPULAR USER REVIEWS</h2>
-            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
-              VIEW MORE
-            </button>
-          </div>
-          <div className="reviews-scroll">
-            {reviewsWithBooks.map((review) => (
-              <div key={`${review.bookIsbn}-${review.reviewer}`} className="review-card">
-                <div className="review-cover">
-                  {review.book.image ? (
-                    <img src={review.book.image} alt={review.book.title} />
-                  ) : (
-                    <div className="review-placeholder">
-                      <span>{review.book.title.charAt(0)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="review-content">
-                  <div className="review-header">
-                    <div className="review-rating-section">
-                      <span className="review-rating-value">{review.rating}/5</span>
-                    </div>
-                    {review.reviewer && (
-                      <span className="review-reviewer">{review.reviewer}</span>
-                    )}
-                  </div>
-                  <p className="review-text">{review.review}</p>
-                  <div className="review-stats">
-                    <span className="stat-item">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                      </svg>
-                      {review.likes}
-                    </span>
-                    <span className="stat-item">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                      </svg>
-                      {review.comments}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* UNDER THE RADAR Section */}
-        <section className="under-radar-section">
-          <div className="section-header-aoty">
-            <h2 className="section-title-aoty">UNDER THE RADAR</h2>
-            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
-              VIEW MORE
-            </button>
-          </div>
-          <div className="radar-scroll">
-            {booksData.slice(3, 9).map((book, index) => (
-              <div 
-                key={book.isbn || index} 
-                className="radar-card"
-                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
-              >
-                <div className="radar-cover">
-                  {book.image ? (
-                    <img src={book.image} alt={book.title} />
-                  ) : (
-                    <div className="radar-placeholder">
-                      <span>{book.title.charAt(0)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="radar-info">
-                  <p className="radar-author">{book.author}</p>
-                  <p className="radar-title">{book.title}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ON THIS DAY Section */}
-        <section className="on-this-day-section">
-          <div className="section-header-aoty">
-            <h2 className="section-title-aoty">ON THIS DAY</h2>
-            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
-              VIEW MORE
-            </button>
-          </div>
-          <div className="on-this-day-grid">
-            {[
-              {
-                yearsAgo: 10,
-                book: booksData.find(b => b.title === "The Great Gatsby") || booksData[0],
-                userScore: 4.2,
-                userCount: 3096
-              },
-              {
-                yearsAgo: 30,
-                book: booksData.find(b => b.title === "1984") || booksData[2],
-                userScore: 4.5,
-                userCount: 139
-              }
-            ].map((item) => (
-              <div 
-                key={`on-this-day-${item.book.isbn}-${item.yearsAgo}`} 
-                className="on-this-day-card"
-                onClick={() => handleNavigate(`/book/isbn/${item.book.isbn}`)}
-              >
-                <div className="on-this-day-label">{item.yearsAgo} YEARS AGO</div>
-                <div className="on-this-day-content">
-                  <div className="on-this-day-cover">
-                    {item.book.image ? (
-                      <img src={item.book.image} alt={item.book.title} />
-                    ) : (
-                      <div className="on-this-day-placeholder">
-                        <span>{item.book.title.charAt(0)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="on-this-day-info">
-                    <p className="on-this-day-author">{item.book.author}</p>
-                    <h3 className="on-this-day-title">{item.book.title}</h3>
-                    <div className="on-this-day-scores">
-                      <div className="on-this-day-score-line">
-                        <div className="on-this-day-score-bar">
-                          <div 
-                            className="on-this-day-score-fill" 
-                            style={{ width: `${(item.userScore / 5) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="on-this-day-score-text">
-                          {item.userScore}/5 user score ({item.userCount.toLocaleString()})
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* RECENTLY ADDED Section */}
-        <section className="recently-added-section">
-          <div className="section-header-aoty">
-            <h2 className="section-title-aoty">RECENTLY ADDED</h2>
-            <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
-              VIEW MORE
-            </button>
-          </div>
-          <div className="recently-added-scroll">
-            {booksData.slice(0, 6).map((book, index) => (
-              <div 
-                key={book.isbn || index} 
-                className="recently-added-card"
-                onClick={() => navigate(`/book/isbn/${book.isbn}`)}
-              >
-                <div className="recently-added-cover">
-                  {book.image ? (
-                    <img src={book.image} alt={book.title} />
-                  ) : (
-                    <div className="recently-added-placeholder">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Bottom Three Column Section */}
-        <section className="bottom-section">
-          <div className="bottom-three-columns">
-            {/* Left: Users' Best */}
-            <div className="bottom-column">
-              <h3 className="bottom-column-title">USERS' BEST BOOKS OF 2025</h3>
-              <div className="bottom-list">
-                {trendingBooks.slice(0, 5).map((book, index) => {
-                  // Use same scoring system as elsewhere on the page
-                  const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
-                  const userScore = parseFloat((book.rating + ((seed % 8 - 4) * 0.05)).toFixed(1))
-                  const normalizedScore = Math.max(0, Math.min(5, userScore)) // Clamp between 0-5
-                  
-                  return (
-                    <div 
-                      key={book.isbn || index} 
-                      className="bottom-list-item"
-                      onClick={() => handleNavigate(`/book/isbn/${book.isbn}`)}
-                    >
-                      <div className="bottom-list-image">
-                        {book.image ? (
-                          <img src={book.image} alt={book.title} />
-                        ) : (
-                          <div className="bottom-list-placeholder">
-                            <span>{book.title.charAt(0)}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="bottom-list-content">
-                        <p className="bottom-list-title">{book.title}</p>
-                        <p className="bottom-list-author">{book.author}</p>
-                      </div>
-                      <div className="bottom-list-rating">{normalizedScore.toFixed(1)}/5</div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="bottom-buttons">
-                <button className="bottom-btn primary" onClick={() => handleNavigate('/my-library')}>
-                  MY LIBRARY
-                </button>
-                <button className="bottom-btn secondary" onClick={() => handleNavigate('/sign-in')}>
-                  SIGN IN
-                </button>
-              </div>
-            </div>
-
-            {/* Middle: Best Books */}
-            <div className="bottom-column">
-              <h3 className="bottom-column-title">BEST BOOKS OF 2025</h3>
-              <div className="publication-links">
-                {publicationsData.map((pub) => (
-                  <button
-                    key={pub}
-                    className="publication-link-btn"
-                    onClick={() => handleNavigate(`/book-list/${pub.toLowerCase().replace(/\s+/g, '-')}`)}
-                  >
-                    {pub}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Popular Genres */}
-            <div className="bottom-column">
-              <h3 className="bottom-column-title">POPULAR GENRES</h3>
-              <div className="genres-list">
-                {genresData.map((genre) => (
-                  <button 
-                    key={genre}
-                    className="genre-item"
-                    onClick={() => handleNavigate('/advanced-search')}
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Footer */}
         <footer className="home-footer">
           <div className="footer-columns">
@@ -606,8 +183,6 @@ function Home() {
               <h4 className="footer-title">MORE</h4>
               <ul className="footer-links">
                 <li><button onClick={() => handleNavigate('/resources')}>Resources</button></li>
-                <li><button onClick={() => handleNavigate('/my-library')}>My Library</button></li>
-                <li><button onClick={() => handleNavigate('/sign-in')}>Sign In</button></li>
               </ul>
             </div>
             <div className="footer-column">

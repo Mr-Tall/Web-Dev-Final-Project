@@ -17,25 +17,19 @@ function BookList() {
   const { books: booksData } = useBooks()
 
   const books = useMemo(() => {
-    let filtered = [...booksData]
+    const yearFilterNum = parseInt(yearFilter)
+    const genreFilterLower = genreFilter.toLowerCase()
     
-    // Filter by year
-    filtered = filtered.filter(book => {
+    // Optimize: combine filter operations in single pass
+    const filtered = booksData.filter(book => {
       const bookYear = new Date(book.releaseDate).getFullYear()
-      return bookYear === parseInt(yearFilter)
+      const yearMatch = bookYear === yearFilterNum
+      const genreMatch = genreFilter === 'All' || book.genre?.toLowerCase() === genreFilterLower
+      return yearMatch && genreMatch
     })
 
-    // Filter by genre if not "All"
-    if (genreFilter !== 'All') {
-      filtered = filtered.filter(book => 
-        book.genre?.toLowerCase() === genreFilter.toLowerCase()
-      )
-    }
-
-    // Sort by rating (highest first)
-    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-
-    return filtered
+    // Sort by rating (highest first) - create new array for immutability
+    return [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0))
   }, [yearFilter, genreFilter, booksData])
 
   // Generate critic scores for books

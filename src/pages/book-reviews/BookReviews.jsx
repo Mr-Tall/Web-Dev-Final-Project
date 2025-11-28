@@ -57,11 +57,12 @@ function BookReviews() {
     })
   }, [booksData])
 
+  // Memoize current year to avoid recalculation
+  const currentYear = useMemo(() => new Date().getFullYear(), [])
+
   // Filter books by time period
   const filteredByTime = useMemo(() => {
     if (timeFilter === 'all-time') return booksWithReviews
-    
-    const currentYear = new Date().getFullYear()
     let startYear, endYear
     
     if (timeFilter.includes('s')) {
@@ -80,7 +81,7 @@ function BookReviews() {
       const bookYear = new Date(book.releaseDate).getFullYear()
       return bookYear >= startYear && bookYear <= endYear
     })
-  }, [booksWithReviews, timeFilter])
+  }, [booksWithReviews, timeFilter, currentYear])
 
   // Filter by genre and search
   const filteredBooks = useMemo(() => {
