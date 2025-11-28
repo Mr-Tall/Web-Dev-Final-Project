@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import userReviewsData from '../../data/reviews/userReviews.json'
 import APP_CONFIG from '../../config/constants'
-import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches, generateTimestamp, toRelativeTime } from '../../utils/bookUtils'
+import { formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches, generateTimestamp, toRelativeTime } from '../../utils/bookUtils'
 import { useBooks } from '../../context/BooksContext'
 import { useUserLibrary } from '../../context/UserLibraryContext'
 import { useAuth } from '../../context/AuthContext'
@@ -96,11 +96,6 @@ export default function BookDetails() {
   const formattedDate = formatDate(book.releaseDate)
   const description = book.description || generateBookDescription(book)
 
-  // Generate library availability (mock data based on book)
-  // TODO: Replace with API call to get real availability
-  const libraryAvailability = useMemo(() => {
-    return generateLibraryAvailability(book.isbn)
-  }, [book.isbn])
 
   const reviewSeedData = useMemo(() => {
     const normalizedIsbn = normalizeIsbn(book.isbn)
@@ -137,9 +132,6 @@ export default function BookDetails() {
   const [heartedReviews, setHeartedReviews] = useState({})
   const [heartedReplies, setHeartedReplies] = useState({})
 
-  const popularReviews = useMemo(() => {
-    return [...userReviews].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 3)
-  }, [userReviews])
 
   const recentReviews = useMemo(() => {
     return [...userReviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3)
@@ -317,9 +309,9 @@ export default function BookDetails() {
                   title={bookStatus.saved ? 'Remove from saved' : 'Save book'}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill={bookStatus.saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                  </svg>
-                </button>
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+              </button>
                 <button 
                   className={`favorite-btn ${bookStatus.favorite ? 'active' : ''}`}
                   onClick={handleFavorite}
@@ -373,134 +365,11 @@ export default function BookDetails() {
             </div>
           </div>
 
-          {/* Right: Availability Options */}
-          <div className="purchase-section">
-            <div className="purchase-box">
-              <div className="availability-header">
-                <h3 className="availability-title">Availability</h3>
-                <div className={`availability-badge ${libraryAvailability.some(lib => lib.available) ? 'in-stock' : 'out-of-stock'}`}>
-                  {libraryAvailability.some(lib => lib.available) ? 'Available' : 'Not Available'}
-                </div>
-              </div>
-
-              <div className="library-list">
-                {libraryAvailability.map((lib) => (
-                  <div key={lib.library} className="library-item">
-                    <div className="library-name-row">
-                      <span className="library-name">{lib.library}</span>
-                      <span className={`library-status ${lib.available ? 'available' : 'unavailable'}`}>
-                        {lib.available ? `${lib.quantity} available` : 'Not available'}
-                      </span>
-                    </div>
-                    {lib.available && (
-                      <button className="btn-checkout">Checkout</button>
-                    )}
-                    {!lib.available && (
-                      <button className="btn-request">Request</button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Reviews Board */}
         <section className="reviews-board">
           <div className="reviews-panels">
-            <div className="reviews-panel popular-panel">
-              <div className="panel-header">
-                <p className="panel-eyebrow">Popular user reviews</p>
-                <button className="panel-link">View all</button>
-          </div>
-              <div className="review-list">
-                {popularReviews.map((review) => (
-                  <article key={review.id} className="review-entry">
-                    <div className="review-badge">
-                      <span className="review-rating-chip">{review.rating.toFixed(1)}/5</span>
-                      <div className="review-stars" aria-label={`Rated ${review.rating} out of 5`}>
-                        {buildStarState(review.rating).map((state, index) => (
-                          <span key={index} className={`star ${state}`}>★</span>
-                        ))}
-                  </div>
-                </div>
-                    <div className="review-content">
-                      <div className="review-row">
-                        <p className="review-author">{review.reviewer}</p>
-                        <span className="review-meta">{review.relativeTime}</span>
-                      </div>
-                      <p className="review-body">{review.review?.replace(/\s*\)\}/g, '')}</p>
-                      <div className="review-actions">
-                        <button
-                          type="button"
-                          className="review-action"
-                          onClick={() => handleToggleThread(review.id)}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/>
-                          </svg>
-                          {review.replies?.length || 0}
-                        </button>
-                        <button
-                          type="button"
-                          className="review-action"
-                          onClick={() => handleHeartReview(review.id)}
-                          aria-pressed={heartedReviews[review.id] || false}
-                        >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                          {review.likes || 0}
-                        </button>
-                      </div>
-                      {activeThread === review.id && (
-                        <div className="review-thread">
-                          <div className="thread-replies">
-                            {review.replies?.length ? (
-                              review.replies.map((reply) => (
-                                <div key={reply.id} className="thread-reply">
-                                  <div className="thread-reply-meta">
-                                    <span className="thread-reply-author">{reply.author}</span>
-                                    <span className="thread-reply-time">{reply.timestamp}</span>
-                                  </div>
-                                  <p className="thread-reply-body">{reply.body?.replace(/\s*\)\}/g, '')}</p>
-                                  <div className="thread-reply-actions">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleHeartReply(review.id, reply.id)}
-                                      aria-pressed={heartedReplies[reply.id] || false}
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                      </svg>
-                                      {reply.likes || 0}
-                                    </button>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="thread-empty">No replies yet. Start the conversation.</p>
-                            )}
-                          </div>
-                          <form className="thread-form" onSubmit={(event) => handleReplySubmit(event, review.id)}>
-                            <textarea
-                              rows={2}
-                              placeholder="Add a reply"
-                              value={replyDrafts[review.id] || ''}
-                              onChange={(event) => handleReplyDraftChange(review.id, event.target.value)}
-                            />
-                            <button type="submit" disabled={!replyDrafts[review.id]?.trim()}>
-                              Reply
-                            </button>
-                          </form>
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-
             <div className="reviews-panel recent-panel">
               <div className="panel-header">
                 <p className="panel-eyebrow">Recent user reviews</p>
@@ -644,6 +513,30 @@ export default function BookDetails() {
                   </article>
             ))}
           </div>
+          
+          {/* View More Reviews Button */}
+          {userReviews.length > recentReviews.length && (
+            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+              <button
+                onClick={() => navigate(`/book/isbn/${book.isbn}/reviews`)}
+                style={{
+                  background: 'var(--gold)',
+                  color: 'var(--dark-maroon)',
+                  border: 'none',
+                  padding: '0.75rem 2rem',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.target.style.opacity = '1'}
+              >
+                View More Reviews ({userReviews.length - recentReviews.length} more)
+              </button>
+            </div>
+          )}
         </div>
           </div>
         </section>

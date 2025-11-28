@@ -96,7 +96,7 @@ function Home() {
               <article 
                 key={item.id} 
                 className="newsworthy-card"
-                onClick={() => navigate('/resources')}
+                onClick={() => navigate(`/resources/${item.id}`)}
               >
                 <div className="newsworthy-image" style={{ backgroundColor: item.color }}>
                   <div className="resource-icon">{item.icon}</div>

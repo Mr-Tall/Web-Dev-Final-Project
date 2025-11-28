@@ -5,8 +5,10 @@ import Home from './pages/home'
 import AdvancedSearch from './pages/advanced-search'
 import BookDetails from './pages/book-details/BookDetails'
 import BookNotFound from './pages/book-details/BookNotFound'
+import AllReviews from './pages/book-details/AllReviews'
 import BookReviews from './pages/book-reviews'
 import ResourcesPage from './pages/resources'
+import ResourceDetail from './pages/resources/ResourceDetail'
 import SignIn from './pages/auth/SignIn'
 import MyLibrary from './pages/my-library'
 import { About, FAQ, Contact, Privacy } from './pages/info'
@@ -59,8 +61,10 @@ function App() {
             <Route path="/book/:id" element={<BookDetails />} />
             <Route path="/book-details" element={<BookDetails />} />
             <Route path="/book/isbn/:isbn" element={<BookDetailsWithFallback />} />
+            <Route path="/book/isbn/:isbn/reviews" element={<AllReviews />} />
             <Route path="/book-reviews" element={<BookReviews />} />
             <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/resources/:id" element={<ResourceDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />

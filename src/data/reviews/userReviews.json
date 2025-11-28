@@ -8,6 +8,54 @@
     "comments": 29
   },
   {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "LiteraryCritic",
+    "rating": 4.5,
+    "review": "Fitzgerald's masterpiece remains as relevant today as it was a century ago. The exploration of the American Dream and its disillusionment is beautifully crafted. Gatsby's character is both tragic and compelling.",
+    "likes": 192,
+    "comments": 15
+  },
+  {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "ClassicBookworm",
+    "rating": 5.0,
+    "review": "This is the quintessential American novel. Every sentence is perfectly crafted, every scene meticulously placed. The symbolism and themes are layered beautifully throughout. A true work of art.",
+    "likes": 445,
+    "comments": 32
+  },
+  {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "ReadingEnthusiast",
+    "rating": 4.7,
+    "review": "The Great Gatsby is a stunning portrayal of the Jazz Age. The decadence, the longing, the tragedy - it's all there. Nick Carraway's narration provides the perfect lens through which to view this world.",
+    "likes": 278,
+    "comments": 18
+  },
+  {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "BookReviewer99",
+    "rating": 4.3,
+    "review": "While I found some parts slow, the overall impact of this novel is undeniable. The green light, the eyes of Dr. T.J. Eckleburg - these symbols stay with you long after reading.",
+    "likes": 156,
+    "comments": 8
+  },
+  {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "NovelLover",
+    "rating": 4.9,
+    "review": "Fitzgerald's prose is simply magical. The way he describes the parties, the characters, the setting - it's like poetry. This book deserves every bit of praise it receives.",
+    "likes": 312,
+    "comments": 21
+  },
+  {
+    "bookIsbn": "978-0-7432-7356-5",
+    "reviewer": "LiteraryExplorer",
+    "rating": 4.6,
+    "review": "A brilliant examination of wealth, love, and the pursuit of happiness. Gatsby's story is both inspiring and heartbreaking. The ending still gives me chills.",
+    "likes": 201,
+    "comments": 12
+  },
+  {
     "bookIsbn": "978-0-06-112008-4",
     "reviewer": "LiteraryFan",
     "rating": 5.0,
