@@ -112,10 +112,12 @@ function AIAssistant() {
       '4. Description keywords (themes, topics)',
       '5. Specifications (pages, publisher, etc.)',
       '',
-      'When recommending, provide:',
-      '- 1-3 book recommendations',
-      '- Brief explanation of why each book matches',
-      '- Option to navigate to the book details page',
+      'When recommending, provide SHORT, CLEAN responses:',
+      '- Keep the main reply brief (1-2 sentences max)',
+      '- List 1-3 book recommendations with just title, rating, and one short reason',
+      '- Format: "Title (Rating/5) - Brief reason"',
+      '- NO long explanations or repetitive text',
+      '- Example: "The Lord of the Rings (4.9/5) - Epic fantasy adventure"',
       '',
       'Available Pages and Routes:',
       '- Home (/)',
@@ -148,8 +150,8 @@ function AIAssistant() {
       '- User: "take me to book reviews" → {"reply":"Taking you to Book Reviews.","action":{"type":"navigate","target":"/book-reviews"}}',
       '- User: "what is advanced search" → {"reply":"Advanced Search is a page where you can search books by title, author, genre, and more. It has filters to help you find exactly what you\'re looking for."}',
       '- User: "take me to The Great Gatsby book" → {"reply":"Taking you to The Great Gatsby.","action":{"type":"navigate","target":"/book/isbn/978-0-7432-7356-5"},"bookIsbn":"978-0-7432-7356-5"}',
-      '- User: "find me a fantasy book" → {"reply":"Based on your interest in fantasy, I recommend: 1) The Lord of the Rings (Rating: 4.9/5) - An epic fantasy adventure. 2) The Hobbit (Rating: 4.8/5) - A classic fantasy tale. Would you like to see details for any of these?","recommendations":[{"title":"The Lord of the Rings","isbn":"978-0-544-00035-4","reason":"High-rated fantasy epic"},{"title":"The Hobbit","isbn":"978-0-547-92822-7","reason":"Classic fantasy adventure"}]}',
-      '- User: "I want a highly rated book about society" → {"reply":"Based on your preferences, I recommend: 1) To Kill a Mockingbird (Rating: 4.8/5) - Explores themes of justice and society. 2) 1984 (Rating: 4.7/5) - Dystopian social commentary. Would you like to see details?","recommendations":[{"title":"To Kill a Mockingbird","isbn":"978-0-06-112008-4","reason":"High rating, social themes"},{"title":"1984","isbn":"978-0-452-28423-4","reason":"Social commentary, highly rated"}]}',
+      '- User: "find me a fantasy book" → {"reply":"Here are some fantasy recommendations:","recommendations":[{"title":"The Lord of the Rings","isbn":"978-0-544-00035-4","reason":"Epic fantasy (4.9/5)"},{"title":"The Hobbit","isbn":"978-0-547-92822-7","reason":"Classic adventure (4.8/5)"}]}',
+      '- User: "I want a highly rated book about society" → {"reply":"Here are highly-rated books about society:","recommendations":[{"title":"To Kill a Mockingbird","isbn":"978-0-06-112008-4","reason":"Justice themes (4.8/5)"},{"title":"1984","isbn":"978-0-452-28423-4","reason":"Social commentary (4.7/5)"}]}',
       '- User: "what is the weather" → {"reply":"Sorry, I couldn\'t understand that. I can only help with questions about this website, its pages, and books available here."}'
     ].join('\n')
   }, [enrichedBooks])
@@ -377,20 +379,26 @@ function AIAssistant() {
       // Use bookIsbn from pre-processing if available and response doesn't have one
       const finalBookIsbn = responseBookIsbn || bookIsbn
 
-      // Format reply with recommendations if available
-      let formattedReply = replyText
-      if (recommendations && recommendations.length > 0) {
-        // Add clickable book recommendations to the reply
-        const recText = recommendations.map((rec, idx) => 
-          `${idx + 1}. ${rec.title} (${rec.reason || 'Matches your preferences'})`
-        ).join('\n')
-        formattedReply = `${replyText}\n\nRecommended Books:\n${recText}\n\nYou can ask me to "take me to [book title]" to see details.`
-      }
+      // Send main reply first
+      appendMessage({ role: 'bot', text: replyText })
       
-      appendMessage({ role: 'bot', text: formattedReply })
-      
-      // Store recommendations for potential navigation
+      // Send recommendations as separate messages for cleaner display
       if (recommendations && recommendations.length > 0) {
+        // Small delay to ensure messages appear in order
+        setTimeout(() => {
+          recommendations.forEach((rec, idx) => {
+            setTimeout(() => {
+              const recText = `${idx + 1}. ${rec.title} - ${rec.reason || 'Matches your preferences'}`
+              appendMessage({ role: 'bot', text: recText })
+            }, idx * 200) // Stagger messages by 200ms
+          })
+          
+          // Add navigation hint as final message
+          setTimeout(() => {
+            appendMessage({ role: 'bot', text: 'Say "take me to [book title]" to see details.' })
+          }, recommendations.length * 200)
+        }, 300)
+        
         console.log('Book recommendations provided:', recommendations)
       }
       
@@ -437,7 +445,7 @@ function AIAssistant() {
 
   return (
     <>
-      <button
+      <button 
         className={`ai-chat-button ${isOpen ? 'open' : ''}`}
         onClick={toggleChat}
         aria-label="Open AI Assistant"
@@ -458,7 +466,7 @@ function AIAssistant() {
         <div className="ai-chat-box">
           <div className="ai-chat-header">
             <h3>AI Library Assistant</h3>
-            <button
+            <button 
               className="ai-chat-close"
               onClick={toggleChat}
               aria-label="Close AI Assistant"
@@ -480,9 +488,9 @@ function AIAssistant() {
               </div>
             ))}
             {isLoading && (
-              <div className="ai-message ai-bot-message">
+            <div className="ai-message ai-bot-message">
                 <p>Thinking...</p>
-              </div>
+            </div>
             )}
             {error && <p className="ai-error-note">{error}</p>}
           </div>
