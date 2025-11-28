@@ -10,7 +10,6 @@ import ResourcesPage from './pages/resources'
 import SignIn from './pages/auth/SignIn'
 import MyLibrary from './pages/my-library'
 import { About, FAQ, Contact, Privacy } from './pages/info'
-import BookList from './pages/book-list'
 import { BooksProvider, useBooks } from './context/BooksContext'
 import { UserLibraryProvider } from './context/UserLibraryContext'
 import { isbnMatches } from './utils/bookUtils'
@@ -66,7 +65,6 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/book-list/:listType" element={<BookList />} />
             </Routes>
           </div>
         </UserLibraryProvider>

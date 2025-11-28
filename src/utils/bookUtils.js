@@ -66,3 +66,34 @@ export const isbnMatches = (isbn1, isbn2) => {
   return normalizeIsbn(isbn1) === normalizeIsbn(isbn2) || isbn1 === isbn2
 }
 
+/**
+ * Generate timestamp based on seed for consistent mock data
+ * @param {number} seed - Seed value for generating timestamp
+ * @returns {string} ISO timestamp string
+ */
+export const generateTimestamp = (seed) => {
+  const now = Date.now()
+  const offset = (seed % 14) * 24 * 60 * 60 * 1000 // up to two weeks
+  return new Date(now - offset).toISOString()
+}
+
+/**
+ * Convert ISO date string to relative time (e.g., "2h", "3d", "1mo")
+ * @param {string} dateString - ISO date string
+ * @returns {string} Relative time string
+ */
+export const toRelativeTime = (dateString) => {
+  const now = Date.now()
+  const past = new Date(dateString).getTime()
+  const diffMinutes = Math.max(1, Math.round((now - past) / 60000))
+  if (diffMinutes < 60) return `${diffMinutes}m`
+  const diffHours = Math.round(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h`
+  const diffDays = Math.round(diffHours / 24)
+  if (diffDays < 30) return `${diffDays}d`
+  const diffMonths = Math.round(diffDays / 30)
+  if (diffMonths < 12) return `${diffMonths}mo`
+  const diffYears = Math.round(diffMonths / 12)
+  return `${diffYears}y`
+}
+

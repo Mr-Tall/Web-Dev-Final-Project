@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import resourcesData from '../../data/resources/resources.json'
 import APP_CONFIG from '../../config/constants'
@@ -8,12 +8,8 @@ import './Home.css'
 
 function Home() {
   const navigate = useNavigate()
-  const { books: booksData, loading: booksLoading } = useBooks()
+  const { books: booksData } = useBooks()
 
-  // Memoize navigation handlers
-  const handleNavigate = useCallback((path) => {
-    navigate(path)
-  }, [navigate])
 
   // Memoize sorted book arrays - optimize by sorting once and slicing
   const newReleases = useMemo(() => 
@@ -51,7 +47,7 @@ function Home() {
             <h2 className="section-title-aoty">NEW RELEASES</h2>
             <div className="section-header-links">
               <button className="header-link active">BOOKS</button>
-              <button className="header-link" onClick={() => handleNavigate('/advanced-search')}>
+              <button className="header-link" onClick={() => navigate('/advanced-search')}>
                 VIEW ALL
               </button>
             </div>
@@ -91,7 +87,7 @@ function Home() {
         <section className="newsworthy-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">RESOURCES</h2>
-            <button className="header-link" onClick={() => handleNavigate('/resources')}>
+            <button className="header-link" onClick={() => navigate('/resources')}>
               VIEW ALL
             </button>
           </div>
@@ -100,7 +96,7 @@ function Home() {
               <article 
                 key={item.id} 
                 className="newsworthy-card"
-                onClick={() => handleNavigate('/resources')}
+                onClick={() => navigate('/resources')}
               >
                 <div className="newsworthy-image" style={{ backgroundColor: item.color }}>
                   <div className="resource-icon">{item.icon}</div>
@@ -134,7 +130,7 @@ function Home() {
                 <button 
                   key={option}
                   className="browse-btn" 
-                  onClick={() => navigate('/book-list/2025')}
+                  onClick={() => navigate('/book-reviews')}
                 >
                   {option}
                 </button>
@@ -158,7 +154,7 @@ function Home() {
             <div className="footer-column">
               <h4 className="footer-title">AUTHORS</h4>
               <ul className="footer-links">
-                <li><button onClick={() => handleNavigate('/advanced-search')}>Browse</button></li>
+                <li><button onClick={() => navigate('/advanced-search')}>Browse</button></li>
                 <li><button onClick={() => navigate('/advanced-search', { state: { sortBy: 'popular' } })}>Popular</button></li>
                 <li><button onClick={() => navigate('/advanced-search', { state: { sortBy: 'new' } })}>New</button></li>
               </ul>
@@ -175,16 +171,16 @@ function Home() {
             <div className="footer-column">
               <h4 className="footer-title">MORE</h4>
               <ul className="footer-links">
-                <li><button onClick={() => handleNavigate('/resources')}>Resources</button></li>
+                <li><button onClick={() => navigate('/resources')}>Resources</button></li>
               </ul>
             </div>
             <div className="footer-column">
               <h4 className="footer-title">SITE DETAILS</h4>
               <ul className="footer-links">
-                <li><button onClick={() => handleNavigate('/faq')}>FAQ</button></li>
-                <li><button onClick={() => handleNavigate('/about')}>About</button></li>
-                <li><button onClick={() => handleNavigate('/contact')}>Contact</button></li>
-                <li><button onClick={() => handleNavigate('/privacy')}>Privacy</button></li>
+                <li><button onClick={() => navigate('/faq')}>FAQ</button></li>
+                <li><button onClick={() => navigate('/about')}>About</button></li>
+                <li><button onClick={() => navigate('/contact')}>Contact</button></li>
+                <li><button onClick={() => navigate('/privacy')}>Privacy</button></li>
               </ul>
             </div>
           </div>

@@ -27,7 +27,6 @@ const NAV_OPTIONS = [
   { label: 'book reviews', path: '/book-reviews' },
   { label: 'resources', path: '/resources' },
   { label: 'my library', path: '/my-library' },
-  { label: 'book list', path: '/book-list/2025' },
   { label: 'sign in', path: '/sign-in' }
 ]
 
@@ -126,7 +125,6 @@ function AIAssistant() {
       '- Resources (/resources)',
       '- My Library (/my-library)',
       '- Sign In (/sign-in)',
-      '- Book List/Rankings (/book-list/2025)',
       '- About (/about)',
       '- FAQ (/faq)',
       '- Contact (/contact)',
@@ -138,7 +136,6 @@ function AIAssistant() {
       '- Book Reviews: View and read book reviews with ratings',
       '- Resources: Access BC library resources and services',
       '- My Library: View saved books, favorites, ratings, and reviews (requires sign-in with @bc.edu email)',
-      '- Book List/Rankings: View highest rated books ranked by score',
       '',
       'Available Books with Details:',
       bookDetails || 'No books available',

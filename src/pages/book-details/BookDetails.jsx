@@ -2,32 +2,12 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import userReviewsData from '../../data/reviews/userReviews.json'
 import APP_CONFIG from '../../config/constants'
-import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches } from '../../utils/bookUtils'
+import { generateLibraryAvailability, formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches, generateTimestamp, toRelativeTime } from '../../utils/bookUtils'
 import { useBooks } from '../../context/BooksContext'
 import { useUserLibrary } from '../../context/UserLibraryContext'
 import { useAuth } from '../../context/AuthContext'
 import './BookDetails.css'
 
-const generateTimestamp = (seed) => {
-  const now = Date.now()
-  const offset = (seed % 14) * 24 * 60 * 60 * 1000 // up to two weeks
-  return new Date(now - offset).toISOString()
-}
-
-const toRelativeTime = (dateString) => {
-  const now = Date.now()
-  const past = new Date(dateString).getTime()
-  const diffMinutes = Math.max(1, Math.round((now - past) / 60000))
-  if (diffMinutes < 60) return `${diffMinutes}m`
-  const diffHours = Math.round(diffMinutes / 60)
-  if (diffHours < 24) return `${diffHours}h`
-  const diffDays = Math.round(diffHours / 24)
-  if (diffDays < 30) return `${diffDays}d`
-  const diffMonths = Math.round(diffDays / 30)
-  if (diffMonths < 12) return `${diffMonths}mo`
-  const diffYears = Math.round(diffMonths / 12)
-  return `${diffYears}y`
-}
 
 // Memoize star state calculation to avoid recalculation
 const buildStarState = (rating) => {
@@ -449,7 +429,7 @@ export default function BookDetails() {
                         <p className="review-author">{review.reviewer}</p>
                         <span className="review-meta">{review.relativeTime}</span>
                       </div>
-                      <p className="review-body">{review.review}</p>
+                      <p className="review-body">{review.review?.replace(/\s*\)\}/g, '')}</p>
                       <div className="review-actions">
                         <button
                           type="button"
@@ -483,7 +463,7 @@ export default function BookDetails() {
                                     <span className="thread-reply-author">{reply.author}</span>
                                     <span className="thread-reply-time">{reply.timestamp}</span>
                                   </div>
-                                  <p className="thread-reply-body">{reply.body}</p>
+                                  <p className="thread-reply-body">{reply.body?.replace(/\s*\)\}/g, '')}</p>
                                   <div className="thread-reply-actions">
                                     <button
                                       type="button"
@@ -594,7 +574,7 @@ export default function BookDetails() {
                         <p className="review-author">{review.reviewer}</p>
                         <span className="review-meta">{review.relativeTime}</span>
                       </div>
-                      <p className="review-body">{review.review}</p>
+                      <p className="review-body">{review.review?.replace(/\s*\)\}/g, '')}</p>
                       <div className="review-actions">
                         <button
                           type="button"
@@ -628,7 +608,7 @@ export default function BookDetails() {
                                     <span className="thread-reply-author">{reply.author}</span>
                                     <span className="thread-reply-time">{reply.timestamp}</span>
                                   </div>
-                                  <p className="thread-reply-body">{reply.body}</p>
+                                  <p className="thread-reply-body">{reply.body?.replace(/\s*\)\}/g, '')}</p>
                                   <div className="thread-reply-actions">
                                     <button
                                       type="button"
