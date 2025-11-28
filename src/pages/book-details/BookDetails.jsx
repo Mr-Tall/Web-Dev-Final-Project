@@ -425,7 +425,6 @@ export default function BookDetails() {
                     Post review
                   </button>
                 </form>
-              )}
 
               <div className="review-list recent">
                 {recentReviews.map((review) => (
