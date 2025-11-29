@@ -16,11 +16,6 @@ const getGenAI = () => {
   return new GoogleGenerativeAI(GEMINI_API_KEY)
 }
 
-// Debug: Log if API key is loaded (only in development)
-if (import.meta.env.DEV) {
-  console.log('Gemini API Key loaded:', GEMINI_API_KEY ? 'Yes (hidden)' : 'No - check .env file')
-}
-
 const NAV_OPTIONS = [
   { label: 'home', path: '/' },
   { label: 'advanced search', path: '/advanced-search' },

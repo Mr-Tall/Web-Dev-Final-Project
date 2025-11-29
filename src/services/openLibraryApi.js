@@ -136,30 +136,3 @@ export const fetchBooksFromOpenLibrary = async (limit = 50) => {
   }
 };
 
-export const searchBooksFromOpenLibrary = async (query, limit = 20) => {
-  try {
-    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=${limit}&fields=title,author_name,first_publish_year,isbn,cover_i,subject,key,edition_key,first_sentence`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.docs || !Array.isArray(data.docs)) {
-      return [];
-    }
-    
-    const books = data.docs
-      .filter(book => book.title && (book.author_name?.length > 0 || book.isbn?.length > 0))
-      .map(mapOpenLibraryBook);
-    
-    return books;
-  } catch (error) {
-    console.error('Error searching books from Open Library:', error);
-    return [];
-  }
-};
-
