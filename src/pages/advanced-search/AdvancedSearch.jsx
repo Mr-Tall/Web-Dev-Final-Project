@@ -1,5 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useCallback, useMemo } from 'react'
 import TrendingSection from '../../components/advanced-search/TrendingSection/TrendingSection'
 import LibrarySection from '../../components/advanced-search/LibrarySection/LibrarySection'
 import SearchForm from '../../components/advanced-search/SearchForm/SearchForm'
@@ -69,10 +68,6 @@ function AdvancedSearch() {
     setSearchTerm(term)
   }, [])
 
-  const handleAddToCart = useCallback((book) => {
-    // Add to cart functionality - placeholder for future implementation// TODO: Implement cart functionality
-    // This would typically add the book to a cart state/API
-  }, [])
 
   const handleFilterChange = useCallback((filterGroup, value, checked) => {
     setFilters(prev => {
@@ -192,12 +187,11 @@ function AdvancedSearch() {
         <SearchForm onSearch={handleSearch} />
       </div>
       <main className={styles.mainContent}>
-        <TrendingSection books={trendingBooks} onAddToCart={handleAddToCart} />
+        <TrendingSection books={trendingBooks} />
         <LibrarySection 
           books={filteredBooks}
           filters={filters}
           onFilterChange={handleFilterChange}
-          onAddToCart={handleAddToCart}
         />
       </main>
     </div>

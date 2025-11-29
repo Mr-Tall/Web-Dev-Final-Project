@@ -2,15 +2,8 @@ import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './BookCard.module.css'
 
-const BookCard = ({ book, onAddToCart, variant = 'grid' }) => {
+const BookCard = ({ book, variant = 'grid' }) => {
   const navigate = useNavigate()
-
-  const handleAddToCart = useCallback((e) => {
-    e.stopPropagation()
-    if (onAddToCart) {
-      onAddToCart(book)
-    }
-  }, [book, onAddToCart])
 
   const handleCardClick = useCallback(() => {
     navigate(`/book/isbn/${book.isbn}`)

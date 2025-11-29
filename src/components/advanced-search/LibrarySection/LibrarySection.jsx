@@ -2,7 +2,7 @@ import FiltersSidebar from '../FiltersSidebar/FiltersSidebar'
 import BooksGrid from '../BooksGrid/BooksGrid'
 import styles from './LibrarySection.module.css'
 
-const LibrarySection = ({ books = [], filters, onFilterChange, onAddToCart }) => {
+const LibrarySection = ({ books = [], filters, onFilterChange }) => {
   return (
     <div className={styles.libraryContent}>
       <FiltersSidebar 

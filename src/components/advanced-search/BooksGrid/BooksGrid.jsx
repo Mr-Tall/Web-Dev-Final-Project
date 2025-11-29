@@ -1,7 +1,7 @@
 import BookCard from '../BookCard/BookCard'
 import styles from './BooksGrid.module.css'
 
-const BooksGrid = ({ books = [], onAddToCart }) => {
+const BooksGrid = ({ books = [] }) => {
   if (books.length === 0) {
     return (
       <div className={styles.booksGrid}>
@@ -16,7 +16,6 @@ const BooksGrid = ({ books = [], onAddToCart }) => {
         <BookCard 
           key={book.id || book.isbn || index} 
           book={book} 
-          onAddToCart={onAddToCart}
           variant="grid"
         />
       ))}

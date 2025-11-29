@@ -1,7 +1,7 @@
 import BookCard from '../BookCard/BookCard'
 import styles from './TrendingSection.module.css'
 
-const TrendingSection = ({ books = [], onAddToCart }) => {
+const TrendingSection = ({ books = [] }) => {
   if (books.length === 0) {
     return null
   }
@@ -48,7 +48,6 @@ const TrendingSection = ({ books = [], onAddToCart }) => {
               <BookCard 
                 key={book.id || book.isbn || index} 
                 book={book} 
-                onAddToCart={onAddToCart}
                 variant="scroll"
               />
             ))}

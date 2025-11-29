@@ -1,21 +1,6 @@
 // Utility functions for book-related operations
 
-import librariesData from '../data/config/libraries.json'
 import APP_CONFIG from '../config/constants'
-
-/**
- * Generate library availability based on ISBN seed
- * @param {string} isbn - Book ISBN
- * @returns {Array} Array of library availability objects
- */
-export const generateLibraryAvailability = (isbn) => {
-  const seed = isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return librariesData.map((library, index) => {
-    const available = (seed + index) % 3 !== 0
-    const quantity = available ? Math.floor((seed + index) % 5) + 1 : 0
-    return { library, available, quantity }
-  })
-}
 
 /**
  * Format date to readable string

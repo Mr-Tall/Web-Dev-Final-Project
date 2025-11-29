@@ -373,7 +373,6 @@ export default function BookDetails() {
             <div className="reviews-panel recent-panel">
               <div className="panel-header">
                 <p className="panel-eyebrow">Recent user reviews</p>
-                <button className="panel-link">View all</button>
               </div>
 
               <form id="reviewComposer" className="review-composer" onSubmit={handleReviewSubmit}>

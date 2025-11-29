@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import criticSourcesData from '../../data/reviews/criticSources.json'
 import { formatDate } from '../../utils/bookUtils'
 import { useBooks } from '../../context/BooksContext'
@@ -7,9 +7,6 @@ import './BookList.css'
 
 function BookList() {
   const navigate = useNavigate()
-  // listType is available for future use when implementing different list types
-  const [decadeFilter] = useState('2020s')
-  const [sourceFilter] = useState('All')
   const [genreFilter, setGenreFilter] = useState('All')
   const [yearFilter, setYearFilter] = useState('2025')
 
@@ -33,7 +30,6 @@ function BookList() {
   }, [yearFilter, genreFilter, booksData])
 
   // Generate critic scores for books
-  // TODO: Replace with API call to get real critic scores
   const booksWithScores = useMemo(() => {
     return books.map((book, index) => {
       const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
@@ -62,26 +58,6 @@ function BookList() {
             <div className="book-list-filters">
               <select 
                 className="filter-select"
-                value={decadeFilter}
-                onChange={(e) => setDecadeFilter(e.target.value)}
-              >
-                <option>DECADE 2020s</option>
-              </select>
-              <select 
-                className="filter-select"
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-              >
-                <option>SOURCE All</option>
-                <option>SOURCE Pitchfork</option>
-                <option>SOURCE The New York Times</option>
-                <option>SOURCE The Guardian</option>
-                <option>SOURCE NPR</option>
-                <option>SOURCE Booklist</option>
-                <option>SOURCE Publishers Weekly</option>
-              </select>
-              <select 
-                className="filter-select"
                 value={genreFilter}
                 onChange={(e) => setGenreFilter(e.target.value)}
               >
@@ -95,7 +71,6 @@ function BookList() {
 
             {/* Year Navigation */}
             <div className="year-navigation">
-              <button className="year-nav-btn">‹</button>
               {['2020s', '2020', '2021', '2022', '2023', '2024', '2025'].map(year => (
                 <button
                   key={year}
@@ -170,7 +145,6 @@ function BookList() {
                   )
                 })}
               </div>
-              <button className="more-releases-btn">MORE RELEASES</button>
             </div>
           </div>
         </div>

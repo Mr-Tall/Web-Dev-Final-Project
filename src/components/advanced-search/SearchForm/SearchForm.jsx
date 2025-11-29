@@ -20,11 +20,6 @@ const SearchForm = ({ onSearch }) => {
     }
   }
 
-  const handleDropdownClick = (e) => {
-    e.stopPropagation()
-    // TODO: Implement dropdown menu functionality
-  }
-
   return (
     <form className={styles.searchForm} onSubmit={handleSubmit}>
       <div className={styles.searchDropdown}>

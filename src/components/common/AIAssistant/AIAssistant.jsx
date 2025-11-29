@@ -345,7 +345,6 @@ function AIAssistant() {
           // Success - break out of loop
           break
         } catch (modelError) {
-          console.log(`Model ${modelName} failed, trying next...`, modelError)
           lastError = modelError
           // Continue to next model
         }
@@ -396,13 +395,11 @@ function AIAssistant() {
           }, recommendations.length * 200)
         }, 300)
         
-        console.log('Book recommendations provided:', recommendations)
       }
       
       // Navigate based on request type - prioritize book navigation
       if (finalBookIsbn && (isBookNavigation || (isNavigationRequest && !isQuestionRequest))) {
         // Book navigation - always navigate if book was detected and it's a navigation request
-        console.log('Navigating to book:', finalBookIsbn, 'Title:', detectedBook?.title)
         // Use setTimeout to ensure message is displayed before navigation
         setTimeout(() => {
           handleNavigation(`/book/isbn/${finalBookIsbn}`)
@@ -410,7 +407,6 @@ function AIAssistant() {
       } else if (isNavigationRequest && !isQuestionRequest) {
         // Regular page navigation
         if (action?.target) {
-          console.log('Navigating to page from action:', action.target)
           setTimeout(() => {
             handleNavigation(action.target)
           }, 100)

@@ -24,7 +24,6 @@ function BookReviews() {
   const itemsPerPage = APP_CONFIG.ITEMS_PER_PAGE
 
   // Generate mock review data for books
-  // TODO: Replace with API call to get real review data
   // Using seed-based approach for stable values across renders
   const booksWithReviews = useMemo(() => {
     return booksData.map((book, index) => {
