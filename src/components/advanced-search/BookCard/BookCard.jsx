@@ -97,15 +97,6 @@ const BookCard = ({ book, onAddToCart, variant = 'grid' }) => {
         <p className={styles.bookAuthor}>{book.author || 'Author Name'}</p>
         <div className={styles.bookAvailabilityRow}>
           <span className={styles.bookAvailability}>Availability: {book.availability || 1}</span>
-          {onAddToCart && (
-            <button 
-              className={styles.addToCartIcon}
-              onClick={handleAddToCart}
-              aria-label="Add to cart"
-            >
-              +
-            </button>
-          )}
         </div>
       </div>
     </article>
