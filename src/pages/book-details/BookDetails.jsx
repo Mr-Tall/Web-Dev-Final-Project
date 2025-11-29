@@ -123,7 +123,7 @@ export default function BookDetails() {
 
   const [userReviews, setUserReviews] = useState(reviewSeedData)
   const [reviewForm, setReviewForm] = useState({
-    rating: '4.0',
+    rating: '0',
     body: ''
   })
   const [hoverRating, setHoverRating] = useState(null)
@@ -181,8 +181,14 @@ export default function BookDetails() {
   const starPickerValue = hoverRating ?? ratingAsNumber
 
   const handleStarSelect = (value) => {
+    const ratingValue = parseFloat(value.toFixed(1))
     setReviewForm(prev => ({ ...prev, rating: value.toFixed(1) }))
     setHoverRating(null)
+    
+    // Auto-save rating when user selects a star (if authenticated)
+    if (isAuthenticated && book?.isbn) {
+      rateBook(book, ratingValue)
+    }
   }
 
   const handleHeartReview = (reviewId) => {
@@ -252,12 +258,35 @@ export default function BookDetails() {
     setHeartedReplies(prev => ({ ...prev, [replyId]: !alreadyHearted }))
   }
 
+  const handleRatingOnly = () => {
+    if (!isAuthenticated) {
+      navigate('/sign-in', { state: { from: location.pathname } })
+      return
+    }
+    if (!book?.isbn) return
+    
+    const ratingValue = parseFloat(reviewForm.rating)
+    if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) return
+    
+    rateBook(book, ratingValue)
+  }
+
   const handleReviewSubmit = (event) => {
     event.preventDefault()
-    if (!reviewForm.body.trim()) return
-
-    const createdAt = new Date().toISOString()
+    
     const ratingValue = parseFloat(reviewForm.rating)
+    const hasReviewText = reviewForm.body.trim().length > 0
+    
+    // If no review text, just save the rating
+    if (!hasReviewText) {
+      if (isAuthenticated && book?.isbn) {
+        rateBook(book, ratingValue)
+      }
+      return
+    }
+
+    // If there's review text, save both rating and review
+    const createdAt = new Date().toISOString()
     const entry = {
       id: `user-${Date.now()}`,
       reviewer: 'Reader',
@@ -275,7 +304,7 @@ export default function BookDetails() {
       reviewBook(book, reviewForm.body.trim())
     }
     
-    setReviewForm({ rating: '4.0', body: '' })
+    setReviewForm({ rating: '0', body: '' })
   }
 
   return (
@@ -389,27 +418,36 @@ export default function BookDetails() {
                       </label>
                       <div className="composer-meta">0 – 5</div>
                     </div>
-                  <div className="review-star-picker" role="radiogroup" aria-label="Select rating">
-                    {[1, 2, 3, 4, 5].map((value) => {
-                      const state = starPickerValue >= value ? 'full' : starPickerValue >= value - 0.5 ? 'half' : 'empty'
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`picker-star ${state}`}
-                          aria-label={`${value} star${value > 1 ? 's' : ''}`}
-                          onClick={() => handleStarSelect(value)}
-                          onMouseEnter={() => setHoverRating(value)}
-                          onMouseLeave={() => setHoverRating(null)}
-                        >
-                          ★
-                        </button>
-                      )
-                    })}
+                  <div className="rating-controls">
+                    <div className="review-star-picker" role="radiogroup" aria-label="Select rating">
+                      {[1, 2, 3, 4, 5].map((value) => {
+                        const state = starPickerValue >= value ? 'full' : starPickerValue >= value - 0.5 ? 'half' : 'empty'
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            className={`picker-star ${state}`}
+                            aria-label={`${value} star${value > 1 ? 's' : ''}`}
+                            onClick={() => handleStarSelect(value)}
+                            onMouseEnter={() => setHoverRating(value)}
+                            onMouseLeave={() => setHoverRating(null)}
+                          >
+                            ★
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      className="reviews-banner-btn secondary"
+                      onClick={handleRatingOnly}
+                    >
+                      {bookStatus.rated ? `Update to ${reviewForm.rating}/5` : `Rate ${reviewForm.rating}/5`}
+                    </button>
                   </div>
                   <textarea
                     name="body"
-                    placeholder="Share your read. What resonated? What didn’t?"
+                    placeholder="Share your read. What resonated? What didn't? (Optional)"
                     rows={3}
                     value={reviewForm.body}
                     onChange={handleReviewChange}
@@ -417,9 +455,9 @@ export default function BookDetails() {
                   <button
                     type="submit"
                     className="reviews-banner-btn primary"
-                    disabled={!reviewForm.body.trim()}
+                    disabled={!reviewForm.body.trim() && !bookStatus.rated}
                   >
-                    Post review
+                    {reviewForm.body.trim() ? 'Post review' : bookStatus.rated ? 'Update rating' : 'Post review'}
                   </button>
                 </form>
 

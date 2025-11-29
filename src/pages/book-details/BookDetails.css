@@ -458,6 +458,26 @@
   align-self: flex-start;
 }
 
+.reviews-banner-btn.secondary {
+  background: rgba(184, 148, 31, 0.2);
+  color: var(--white);
+  border: 1px solid rgba(184, 148, 31, 0.5);
+  align-self: flex-start;
+}
+
+.reviews-banner-btn.secondary:hover {
+  background: rgba(184, 148, 31, 0.3);
+  border-color: var(--gold);
+}
+
+.rating-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
 .review-star-picker {
   display: flex;
   gap: 0.4rem;

@@ -64,12 +64,12 @@ export default function MyLibrary() {
 
     const avgRating =
       rated.length > 0
-        ? (
+        ? Math.max(0, Math.min(5.0, (
             rated.reduce((sum, b) => {
-              const rating = b.rating || 0
+              const rating = Math.min(5, Math.max(0, b.rating || 0))
               return sum + rating
             }, 0) / rated.length
-          ).toFixed(1)
+          ))).toFixed(1)
         : '0.0'
 
     // Calculate favorite genre
@@ -207,7 +207,7 @@ export default function MyLibrary() {
             )}
             <h3 className="book-card-title">{book.title}</h3>
             <p className="book-card-author">{book.author}</p>
-            {book.reviewed && book.rating && (
+            {book.rated && book.rating && (
               <div className="book-card-rating">
                 <span className="rating-value">Your Rating: {book.rating.toFixed(1)} / 5</span>
                 {book.ratingLabel && book.ratingLabel !== '—' && (

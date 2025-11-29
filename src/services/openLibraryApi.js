@@ -1,7 +1,7 @@
 
 const generateMockRating = () => {
-  // Generate rating between 3.5 and 5.0 with one decimal place
-  return Math.round((Math.random() * 1.5 + 3.5) * 10) / 10;
+  // Generate rating between 3.5 and 5.0 with one decimal place, clamped to max 5.0
+  return Math.min(5.0, Math.round((Math.random() * 1.5 + 3.5) * 10) / 10);
 };
 
 const getFirstIsbn = (isbnArray) => {

@@ -12,6 +12,8 @@ function AdvancedSearch() {
   const { books: booksData } = useBooks()
   const [searchTerm, setSearchTerm] = useState('')
   const librarySectionRef = useRef(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [filters, setFilters] = useState({
     category: [],
     languages: [],
@@ -84,6 +86,7 @@ function AdvancedSearch() {
 
   const handleSearch = useCallback((term) => {
     setSearchTerm(term)
+    setCurrentPage(1) // Reset to first page on new search
     // Reset filters when search is cleared
     if (!term || term.trim() === '') {
       setFilters({
@@ -98,6 +101,7 @@ function AdvancedSearch() {
 
 
   const handleFilterChange = useCallback((filterGroup, value, checked) => {
+    setCurrentPage(1) // Reset to first page when filters change
     setFilters(prev => {
       // For sortBy, it's a single value (not an array)
       if (filterGroup === 'sortBy') {
@@ -210,6 +214,20 @@ function AdvancedSearch() {
     return filtered
   }, [allBooks, searchTerm, filters, fuse])
 
+  // Pagination
+  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage)
+  const paginatedBooks = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return filteredBooks.slice(startIndex, startIndex + itemsPerPage)
+  }, [filteredBooks, currentPage, itemsPerPage])
+
+  // Reset to page 1 when filtered books change significantly
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1)
+    }
+  }, [totalPages, currentPage])
+
   // Get trending books (top rated)
   const trendingBooks = useMemo(() => {
     return [...allBooks]
@@ -238,10 +256,15 @@ function AdvancedSearch() {
         )}
         <div ref={librarySectionRef}>
           <LibrarySection 
-            books={filteredBooks}
+            books={paginatedBooks}
+            allBooksCount={filteredBooks.length}
             filters={filters}
             onFilterChange={handleFilterChange}
             availableGenres={availableGenres}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
           />
         </div>
       </main>

@@ -33,7 +33,8 @@ function BookReviews() {
       const seed = book.isbn.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
       const ratingCount = APP_CONFIG.RATING_COUNT_MIN + ((seed * 11) % (APP_CONFIG.RATING_COUNT_MAX - APP_CONFIG.RATING_COUNT_MIN + 1))
       const reviewCount = Math.floor(ratingCount * 0.01) + APP_CONFIG.REVIEW_COUNT_MIN + ((seed * 7) % (APP_CONFIG.REVIEW_COUNT_MAX - APP_CONFIG.REVIEW_COUNT_MIN + 1))
-      const formattedRating = (baseRating + ((seed % 10 - 5) * 0.05)).toFixed(2)
+      const calculatedRating = baseRating + ((seed % 10 - 5) * 0.05)
+      const formattedRating = Math.max(0, Math.min(5.0, calculatedRating)).toFixed(2)
       
       return {
         ...book,
@@ -52,22 +53,39 @@ function BookReviews() {
   // Filter books by time period
   const filteredByTime = useMemo(() => {
     if (timeFilter === 'all-time') return booksWithReviews
+    
     let startYear, endYear
     
-    if (timeFilter.includes('s')) {
+    // Handle custom range format: "2020-2024"
+    if (timeFilter.includes('-') && !timeFilter.includes('s')) {
+      const parts = timeFilter.split('-')
+      if (parts.length === 2) {
+        startYear = parseInt(parts[0])
+        endYear = parseInt(parts[1])
+        if (isNaN(startYear) || isNaN(endYear)) {
+          return booksWithReviews
+        }
+      } else {
+        return booksWithReviews
+      }
+    } else if (timeFilter.includes('s')) {
       // Decade filter (e.g., "2020s")
       const decade = parseInt(timeFilter.replace('s', ''))
+      if (isNaN(decade)) return booksWithReviews
       startYear = decade
       endYear = decade + 9
     } else {
-      // Year filter
+      // Single year filter
       const year = parseInt(timeFilter)
+      if (isNaN(year)) return booksWithReviews
       startYear = year
       endYear = year
     }
     
     return booksWithReviews.filter(book => {
+      if (!book.releaseDate) return false
       const bookYear = new Date(book.releaseDate).getFullYear()
+      if (isNaN(bookYear)) return false
       return bookYear >= startYear && bookYear <= endYear
     })
   }, [booksWithReviews, timeFilter, currentYear])
@@ -94,10 +112,63 @@ function BookReviews() {
     return filtered
   }, [filteredByTime, genreFilter, searchFilter])
 
-  // Sort by rating (highest first)
+  // Sort books based on selected top option
   const sortedBooks = useMemo(() => {
-    return [...filteredBooks].sort((a, b) => b.rating - a.rating)
-  }, [filteredBooks])
+    let sorted = [...filteredBooks]
+    
+    switch (selectedTopOption) {
+      case 'Popular':
+        // Sort by number of ratings (most ratings first)
+        sorted.sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0))
+        break
+      
+      case 'Esoteric':
+        // Sort by rating first, then by fewer ratings (high rating but less known)
+        // Calculate esoteric score: rating * (1 / log(ratingCount + 1))
+        sorted.sort((a, b) => {
+          const aRating = a.rating || 0
+          const bRating = b.rating || 0
+          const aCount = a.ratingCount || 1
+          const bCount = b.ratingCount || 1
+          
+          // Esoteric score: higher rating with fewer ratings gets higher score
+          const aScore = aRating * (1 / Math.log(aCount + 1))
+          const bScore = bRating * (1 / Math.log(bCount + 1))
+          
+          return bScore - aScore
+        })
+        break
+      
+      case 'Diverse':
+        // Limit to one book per author (highest rated), then sort by rating
+        const authorMap = new Map()
+        filteredBooks.forEach(book => {
+          const author = (book.author?.toLowerCase() || 'unknown').trim()
+          if (!authorMap.has(author)) {
+            // First occurrence - add it
+            authorMap.set(author, book)
+          } else {
+            // Already have a book by this author - keep the one with higher rating
+            const existingBook = authorMap.get(author)
+            if ((book.rating || 0) > (existingBook.rating || 0)) {
+              authorMap.set(author, book)
+            }
+          }
+        })
+        sorted = Array.from(authorMap.values())
+        // Sort by rating after limiting to one per author
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      
+      case 'Top':
+      default:
+        // Sort by rating (highest first)
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+    }
+    
+    return sorted
+  }, [filteredBooks, selectedTopOption])
 
   // Pagination
   const totalPages = Math.ceil(sortedBooks.length / itemsPerPage)
@@ -109,6 +180,27 @@ function BookReviews() {
   const handleTimeFilter = useCallback((filter) => {
     setTimeFilter(filter)
     setCurrentPage(1)
+    // Update selectedTimeRange to match the filter for display consistency
+    if (filter === 'all-time') {
+      setSelectedTimeRange('All-time')
+    } else if (filter.includes('s')) {
+      // Decade format - keep as is for display
+      setSelectedTimeRange(filter)
+    } else if (filter.includes('-')) {
+      // Custom range - keep as is
+      setSelectedTimeRange(filter)
+    } else {
+      // Single year - format for display
+      const year = parseInt(filter)
+      const currentYear = new Date().getFullYear()
+      if (year === currentYear) {
+        setSelectedTimeRange('This Year')
+      } else if (year === currentYear - 1) {
+        setSelectedTimeRange('Last Year')
+      } else {
+        setSelectedTimeRange(filter)
+      }
+    }
   }, [])
 
   const handleGenreFilter = useCallback((genre) => {
@@ -132,20 +224,28 @@ function BookReviews() {
   }, [])
 
   const handleTimeRangeSelect = useCallback((range) => {
-    setSelectedTimeRange(range)
     setCurrentPage(1)
     // Update timeFilter based on selected range
     if (range === 'All-time') {
       setTimeFilter('all-time')
+      setSelectedTimeRange('All-time')
     } else if (range === 'This Year') {
-      setTimeFilter(new Date().getFullYear().toString())
+      const currentYear = new Date().getFullYear().toString()
+      setTimeFilter(currentYear)
+      setSelectedTimeRange('This Year')
     } else if (range === 'Last Year') {
-      setTimeFilter((new Date().getFullYear() - 1).toString())
+      const lastYear = (new Date().getFullYear() - 1).toString()
+      setTimeFilter(lastYear)
+      setSelectedTimeRange('Last Year')
     } else if (range.includes('-')) {
-      // Custom range format: "2020-2024"
-      const [startYear, endYear] = range.split('-')
-      // For now, use the end year as the filter
-      setTimeFilter(endYear)
+      // Custom range format: "2020-2024" - keep the full range format
+      setTimeFilter(range)
+      // Format for display: "2020-2024"
+      setSelectedTimeRange(range)
+    } else {
+      // Fallback to all-time if unknown format
+      setTimeFilter('all-time')
+      setSelectedTimeRange('All-time')
     }
   }, [])
 
@@ -410,7 +510,9 @@ function BookReviews() {
                       setIsTimeRangeModalOpen(true)
                     }}
                   >
-                    {selectedTimeRange}
+                    {selectedTimeRange.includes('-') && !selectedTimeRange.includes('s')
+                      ? `Custom: ${selectedTimeRange.split('-')[0]}-${selectedTimeRange.split('-')[1]}`
+                      : selectedTimeRange}
                   </button>
                   {isTimeRangeModalOpen && (
                     <TimeRangeModal

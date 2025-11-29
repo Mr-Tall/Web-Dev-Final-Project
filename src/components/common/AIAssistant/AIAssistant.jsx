@@ -51,9 +51,10 @@ function AIAssistant() {
   const enrichedBooks = useMemo(() => {
     return books.map(book => {
       const reviews = userReviewsData.filter(r => r.bookIsbn === book.isbn)
-      const avgRating = reviews.length > 0 
-        ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length 
-        : book.rating || 0
+      const calculatedAvgRating = reviews.length > 0 
+        ? reviews.reduce((sum, r) => sum + Math.min(5, Math.max(0, r.rating || 0)), 0) / reviews.length 
+        : Math.min(5, Math.max(0, book.rating || 0))
+      const avgRating = Math.max(0, Math.min(5.0, calculatedAvgRating))
       const totalLikes = reviews.reduce((sum, r) => sum + (r.likes || 0), 0)
       const description = book.description || generateBookDescription(book)
       const reviewTexts = reviews.map(r => r.review).join(' ')
