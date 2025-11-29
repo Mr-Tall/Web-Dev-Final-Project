@@ -1,6 +1,5 @@
 .book-reviews-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--dark-maroon) 0%, var(--maroon) 50%, var(--light-maroon) 100%);
   padding: 2rem 0;
   color: var(--white);
 }
@@ -17,8 +16,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .reviews-title {
@@ -35,22 +32,8 @@
 }
 
 .header-icon-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--white);
   width: 40px;
   height: 40px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--gold);
 }
 
 .recommendations-btn {
@@ -94,55 +77,46 @@
   gap: 2rem;
 }
 
-/* Left Column - Main Chart */
-.reviews-main {
+/* Common panel styles */
+.reviews-main,
+.sidebar-section {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Time Filter Buttons */
-.time-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+/* Common divider pattern */
+.time-filters,
+.view-controls {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.time-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .time-filter-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
   padding: 0.5rem 1rem;
-  border-radius: 6px;
   font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.time-filter-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--white);
-}
-
-.time-filter-btn.active {
+.time-filter-btn.active,
+.pagination-btn.active {
   background: var(--gold);
   color: var(--dark-maroon);
   border-color: var(--gold);
   font-weight: 600;
 }
 
-/* View Controls */
 .view-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .view-options {
@@ -152,34 +126,14 @@
 }
 
 .view-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
   font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.view-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--white);
 }
 
 .view-btn.active {
   background: rgba(184, 148, 31, 0.2);
   border-color: var(--gold);
   color: var(--gold);
-}
-
-.settings-btn {
-  width: 36px;
-  height: 36px;
-  padding: 0;
 }
 
 /* Pagination */
@@ -190,32 +144,14 @@
 }
 
 .pagination-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
   font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
   min-width: 40px;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--white);
 }
 
 .pagination-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-}
-
-.pagination-btn.active {
-  background: var(--gold);
-  color: var(--dark-maroon);
-  border-color: var(--gold);
-  font-weight: 600;
 }
 
 .pagination-ellipsis {
@@ -465,13 +401,6 @@
   min-width: 0;
 }
 
-.sidebar-section {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .sidebar-title {
   font-size: 1.1rem;
   font-weight: 600;
@@ -497,14 +426,19 @@
   position: relative;
 }
 
-.filter-select {
+/* Common input/select styles */
+.filter-select,
+.filter-search {
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--white);
-  padding: 0.5rem;
   border-radius: 6px;
   font-size: 0.9rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
   cursor: pointer;
 }
 
@@ -533,32 +467,12 @@
 }
 
 .filter-search {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--white);
   padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
   margin-bottom: 0.75rem;
 }
 
 .filter-search::placeholder {
   color: rgba(255, 255, 255, 0.5);
-}
-
-.advanced-options-link {
-  display: block;
-  color: var(--gold);
-  font-size: 0.85rem;
-  text-decoration: none;
-  margin-bottom: 1rem;
-  transition: color 0.2s ease;
-}
-
-.advanced-options-link:hover {
-  color: var(--light-gold);
-  text-decoration: underline;
 }
 
 .update-chart-container {
@@ -567,6 +481,7 @@
   margin-top: 1rem;
 }
 
+/* Gold button pattern */
 .update-chart-btn {
   background: var(--gold);
   color: var(--dark-maroon);
@@ -581,129 +496,6 @@
 
 .update-chart-btn:hover {
   background: var(--light-gold);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Advanced Options Section */
-.advanced-options-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(184, 148, 31, 0.2);
-}
-
-.advanced-option-group {
-  margin-bottom: 1.5rem;
-}
-
-.advanced-option-group:last-of-type {
-  margin-bottom: 0;
-}
-
-.advanced-option-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--white);
-  margin: 0 0 0.75rem 0;
-}
-
-.advanced-checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.advanced-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.85rem;
-  transition: color 0.2s ease;
-}
-
-.advanced-checkbox:hover {
-  color: var(--white);
-}
-
-.advanced-checkbox input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: var(--gold);
-}
-
-.advanced-checkbox input[type="checkbox"]:checked {
-  accent-color: var(--gold);
-}
-
-.advanced-auto-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.advanced-auto-text {
-  color: var(--white);
-  font-size: 0.85rem;
-}
-
-.advanced-edit-link {
-  color: var(--gold);
-  font-size: 0.85rem;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.advanced-edit-link:hover {
-  color: var(--light-gold);
-  text-decoration: underline;
-}
-
-.support-section {
-  background: rgba(184, 148, 31, 0.1);
-  border-color: rgba(184, 148, 31, 0.3);
-}
-
-.support-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1rem 0;
-}
-
-.support-list li {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.5rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  line-height: 1.5;
-}
-
-.support-list li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--gold);
-  font-size: 1.2rem;
-}
-
-.subscription-btn {
-  width: 100%;
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.subscription-btn:hover {
-  background: #0056b3;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -770,4 +562,5 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
 
