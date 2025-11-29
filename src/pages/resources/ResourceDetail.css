@@ -35,21 +35,28 @@
   margin-bottom: 2rem;
 }
 
+/* Common gold button styles */
 .back-button,
-.back-button-header {
+.back-button-header,
+.resource-cta-button {
   background: var(--gold);
   color: var(--dark-maroon);
   border: none;
-  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.back-button,
+.back-button-header {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+}
+
 .back-button:hover,
-.back-button-header:hover {
+.back-button-header:hover,
+.resource-cta-button:hover {
   background: var(--light-gold);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(184, 148, 31, 0.4);
@@ -195,21 +202,8 @@
 }
 
 .resource-cta-button {
-  background: var(--gold);
-  color: var(--dark-maroon);
-  border: none;
   padding: 1rem 2.5rem;
-  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.resource-cta-button:hover {
-  background: var(--light-gold);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(184, 148, 31, 0.4);
 }
 
 /* Responsive */

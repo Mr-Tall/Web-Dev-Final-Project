@@ -50,6 +50,7 @@
   justify-content: center;
 }
 
+/* Common button base */
 .locked-primary-btn,
 .locked-secondary-btn {
   border: none;
@@ -111,12 +112,18 @@
   gap: 1rem;
 }
 
-.stat-card {
+/* Common card/panel background pattern */
+.stat-card,
+.filter-btn,
+.my-library-book-card {
   background: rgba(139, 46, 46, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.stat-card {
   border-radius: 12px;
   padding: 1.5rem;
-  backdrop-filter: blur(8px);
 }
 
 .stat-label {
@@ -145,8 +152,6 @@
 }
 
 .filter-btn {
-  background: rgba(139, 46, 46, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.9);
   padding: 0.75rem 1.5rem;
   border-radius: 999px;
@@ -177,13 +182,10 @@
 }
 
 .my-library-book-card {
-  background: rgba(139, 46, 46, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(8px);
   position: relative;
 }
 

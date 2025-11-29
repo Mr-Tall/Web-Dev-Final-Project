@@ -218,27 +218,6 @@
   color: var(--white);
 }
 
-.reviews-banner {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18rem;
-  font-weight: 600;
-  color: #1f1f1f;
-  background-blend-mode: screen;
-}
-
-.reviews-banner p {
-  margin: 0;
-  color: rgba(17, 17, 17, 0.85);
-}
-
 .reviews-banner-btn {
   border: none;
   border-radius: 999px;
@@ -347,6 +326,7 @@
 .star.half {
   background: linear-gradient(90deg, #f5c451 50%, rgba(0, 0, 0, 0.2) 50%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -387,7 +367,9 @@
   color: rgba(0, 0, 0, 0.55);
 }
 
-.review-action {
+/* Common action button styles */
+.review-action,
+.thread-reply-actions button {
   background: none;
   border: none;
   color: inherit;
@@ -397,14 +379,15 @@
   cursor: pointer;
 }
 
-.review-action svg {
+.review-action svg,
+.thread-reply-actions button svg {
   width: 14px;
   height: 14px;
   stroke: currentColor;
 }
 
-
-.review-action[aria-pressed='true'] svg {
+.review-action[aria-pressed='true'] svg,
+.thread-reply-actions button[aria-pressed='true'] svg {
   color: #f5c451;
   stroke: #f5c451;
   fill: #f5c451;
@@ -433,6 +416,12 @@
   flex-direction: column;
   font-size: 0.85rem;
   color: rgba(0, 0, 0, 0.8);
+}
+
+.composer-meta {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+  align-self: flex-end;
 }
 
 .composer-row input {
@@ -499,6 +488,7 @@
 .picker-star.half {
   background: linear-gradient(90deg, #f5c451 50%, rgba(0, 0, 0, 0.25) 50%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -534,6 +524,10 @@
   color: rgba(0, 0, 0, 0.55);
 }
 
+.thread-reply-time {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 .thread-reply-author {
   font-weight: 600;
   color: #111;
@@ -549,23 +543,12 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .thread-reply-actions button {
-  border: none;
-  background: none;
-  display: inline-flex;
-  align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-  cursor: pointer;
-}
-
-.thread-reply-actions button[aria-pressed='true'] svg {
-  color: #f5c451;
-  stroke: #f5c451;
-  fill: #f5c451;
 }
 
 .thread-empty {
@@ -606,11 +589,6 @@
 }
 
 @media (max-width: 768px) {
-  .reviews-banner {
-    flex-direction: column;
-    text-align: center;
-  }
-
   .panel-header {
     flex-direction: column;
     align-items: flex-start;
