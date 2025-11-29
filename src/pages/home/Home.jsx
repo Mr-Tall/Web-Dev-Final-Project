@@ -87,7 +87,10 @@ function Home() {
         <section className="newsworthy-section">
           <div className="section-header-aoty">
             <h2 className="section-title-aoty">RESOURCES</h2>
-            <button className="header-link" onClick={() => navigate('/resources')}>
+            <button className="header-link" onClick={() => {
+              navigate('/resources')
+              window.scrollTo(0, 0)
+            }}>
               VIEW ALL
             </button>
           </div>
@@ -126,15 +129,30 @@ function Home() {
           <div className="browse-by-section">
             <h3 className="browse-by-title">BROWSE BY</h3>
             <div className="browse-by-buttons">
-              {APP_CONFIG.BROWSE_OPTIONS.map((option) => (
-                <button 
-                  key={option}
-                  className="browse-btn" 
-                  onClick={() => navigate('/book-reviews')}
-                >
-                  {option}
-                </button>
-              ))}
+              {APP_CONFIG.BROWSE_OPTIONS.map((option) => {
+                let navigateTo = '/'
+                if (option === 'Date') {
+                  navigateTo = '/book-reviews'
+                } else if (option === 'Reviews') {
+                  navigateTo = '/book-reviews'
+                } else if (option === 'Genres') {
+                  navigateTo = '/advanced-search'
+                } else if (option === 'Profile') {
+                  navigateTo = '/my-library'
+                }
+                return (
+                  <button 
+                    key={option}
+                    className="browse-btn" 
+                    onClick={() => {
+                      navigate(navigateTo)
+                      window.scrollTo(0, 0)
+                    }}
+                  >
+                    {option}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -147,7 +165,6 @@ function Home() {
               <ul className="footer-links">
                 <li><button onClick={() => navigate('/book-reviews')}>Highest Rated</button></li>
                 <li><button onClick={() => navigate('/book-reviews')}>Overview</button></li>
-                <li><button onClick={() => navigate('/')}>On This Day</button></li>
                 <li><button onClick={() => navigate('/')}>New Releases</button></li>
               </ul>
             </div>
