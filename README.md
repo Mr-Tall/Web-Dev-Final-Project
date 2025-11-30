@@ -1,4 +1,4 @@
-# BC Library Catalog
+# Library Catalog AI
 
 An AI-powered library catalog frontend application designed to help Boston College students discover, explore, and engage with the library's collection. The application addresses the underutilization of BC's library catalog by providing an intuitive interface that encourages exploration and discovery.
 

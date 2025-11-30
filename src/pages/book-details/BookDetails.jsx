@@ -2,36 +2,21 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import userReviewsData from '../../data/reviews/userReviews.json'
 import APP_CONFIG from '../../config/constants'
-import { formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches, generateTimestamp, toRelativeTime } from '../../utils/bookUtils'
+import { formatDate, calculateReadTime, generateBookDescription, normalizeIsbn, isbnMatches, toRelativeTime } from '../../utils/bookUtils'
+import { buildStarState, getAllReviewsForBook, saveReviewToStorage, deleteReviewFromStorage, cleanReviewText } from '../../utils/reviewUtils'
+import { ReviewThread, ReviewActions } from '../../components/common/ReviewThread'
 import { useBooks } from '../../context/BooksContext'
 import { useUserLibrary } from '../../context/UserLibraryContext'
 import { useAuth } from '../../context/AuthContext'
 import './BookDetails.css'
-
-
-// Memoize star state calculation to avoid recalculation
-const buildStarState = (rating) => {
-  const stars = []
-  const ratingNum = parseFloat(rating) || 0
-  for (let i = 1; i <= 5; i += 1) {
-    if (ratingNum >= i) {
-      stars.push('full')
-    } else if (ratingNum >= i - 0.5) {
-      stars.push('half')
-    } else {
-      stars.push('empty')
-    }
-  }
-  return stars
-}
 
 export default function BookDetails() {
   const { id, isbn } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   const { books, loading } = useBooks()
-  const { isAuthenticated } = useAuth()
-  const { saveBook, unsaveBook, favoriteBook, unfavoriteBook, rateBook, reviewBook, getBookStatus } = useUserLibrary()
+  const { isAuthenticated, user } = useAuth()
+  const { saveBook, unsaveBook, favoriteBook, unfavoriteBook, rateBook, unrateBook, reviewBook, unreviewBook, getBookStatus } = useUserLibrary()
 
   // Find the book by ID (using ISBN or index)
   const { book, bookNotFound } = useMemo(() => {
@@ -97,31 +82,18 @@ export default function BookDetails() {
   const description = book.description || generateBookDescription(book)
 
 
-  const reviewSeedData = useMemo(() => {
-    const normalizedIsbn = normalizeIsbn(book.isbn)
-    const matches = userReviewsData.filter(entry => normalizeIsbn(entry.bookIsbn) === normalizedIsbn)
-    const fallback = matches.length ? matches : userReviewsData.slice(0, 3)
-    return fallback.map((review, index) => {
-      const rating = parseFloat((review.rating || 4).toFixed(1))
-      const timestamp = generateTimestamp(index + Math.round(rating * 10))
-      return {
-        ...review,
-        id: `${review.bookIsbn}-${index}`,
-        rating,
-        createdAt: timestamp,
-        relativeTime: toRelativeTime(timestamp),
-        replies: (review.replies || []).map((reply, replyIndex) => ({
-          id: reply.id || `${review.bookIsbn}-${index}-reply-${replyIndex}`,
-          author: reply.author || 'Reader',
-          body: reply.body || '',
-          timestamp: reply.timestamp || toRelativeTime(timestamp),
-          likes: reply.likes || 0
-        }))
-      }
-    })
-  }, [book.isbn])
+  // Get all reviews for this book (mock + stored)
+  const allReviewsForBook = useMemo(() => {
+    if (!book?.isbn) return []
+    return getAllReviewsForBook(book.isbn, userReviewsData)
+  }, [book?.isbn])
 
-  const [userReviews, setUserReviews] = useState(reviewSeedData)
+  const [userReviews, setUserReviews] = useState(() => allReviewsForBook)
+  
+  // Update reviews when book changes or when reviews are loaded
+  useEffect(() => {
+    setUserReviews(allReviewsForBook)
+  }, [allReviewsForBook])
   const [reviewForm, setReviewForm] = useState({
     rating: '0',
     body: ''
@@ -131,10 +103,32 @@ export default function BookDetails() {
   const [replyDrafts, setReplyDrafts] = useState({})
   const [heartedReviews, setHeartedReviews] = useState({})
   const [heartedReplies, setHeartedReplies] = useState({})
+  const [isEditingReview, setIsEditingReview] = useState(false)
+  const [editingReviewId, setEditingReviewId] = useState(null)
+
+  // Find user's review and separate from others
+  const userReview = useMemo(() => {
+    if (!isAuthenticated || !user) return null
+    const userId = user.uid || user.email
+    // Find review by userId, or by checking if reviewer name matches user
+    return userReviews.find(r => {
+      if (r.userId === userId) return true
+      // Also check if reviewer name matches (for backwards compatibility)
+      const userName = user.name || user.email?.split('@')[0] || 'You'
+      return r.reviewer === userName || r.reviewer === 'You'
+    }) || null
+  }, [userReviews, isAuthenticated, user])
+
+  // Other reviews (excluding user's review)
+  const otherReviews = useMemo(() => {
+    if (!userReview) return userReviews
+    return userReviews.filter(r => r.id !== userReview.id)
+  }, [userReviews, userReview])
 
   const recentReviews = useMemo(() => {
-    return [...userReviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3)
-  }, [userReviews])
+    const sorted = [...otherReviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    return sorted.slice(0, 3)
+  }, [otherReviews])
 
   const handleReviewChange = (event) => {
     const { name, value } = event.target
@@ -223,16 +217,25 @@ export default function BookDetails() {
       id: `${reviewId}-reply-${Date.now()}`,
       author: 'Reader',
       body: text,
-      timestamp: 'moments ago'
+      timestamp: toRelativeTime(new Date().toISOString()),
+      likes: 0
     }
 
-    setUserReviews(prev =>
-      prev.map(review =>
+    setUserReviews(prev => {
+      const updated = prev.map(review =>
         review.id === reviewId
           ? { ...review, replies: [...(review.replies || []), reply] }
           : review
       )
-    )
+      
+      // Persist the updated review with reply
+      const reviewWithReply = updated.find(r => r.id === reviewId)
+      if (reviewWithReply && book?.isbn) {
+        saveReviewToStorage(reviewWithReply, book.isbn)
+      }
+      
+      return updated
+    })
     setReplyDrafts(prev => ({ ...prev, [reviewId]: '' }))
   }
 
@@ -271,8 +274,27 @@ export default function BookDetails() {
     rateBook(book, ratingValue)
   }
 
+  const handleUnrate = () => {
+    if (!isAuthenticated) {
+      navigate('/sign-in', { state: { from: location.pathname } })
+      return
+    }
+    if (!book?.isbn) return
+    
+    if (window.confirm('Are you sure you want to remove your rating?')) {
+      unrateBook(book.isbn)
+      setReviewForm(prev => ({ ...prev, rating: '0' }))
+    }
+  }
+
   const handleReviewSubmit = (event) => {
     event.preventDefault()
+    
+    // Prevent creating a new review if user already has one (unless editing)
+    if (userReview && !isEditingReview) {
+      alert('You already have a review for this book. Please edit your existing review or reply to others.')
+      return
+    }
     
     const ratingValue = parseFloat(reviewForm.rating)
     const hasReviewText = reviewForm.body.trim().length > 0
@@ -285,30 +307,112 @@ export default function BookDetails() {
       return
     }
 
-    // If there's review text, save both rating and review
+    const userId = isAuthenticated && user ? (user.uid || user.email) : null
     const createdAt = new Date().toISOString()
-    const entry = {
-      id: `user-${Date.now()}`,
-      reviewer: 'Reader',
-      rating: ratingValue,
-      review: reviewForm.body.trim(),
-      likes: 0,
-      createdAt,
-      relativeTime: '1m'
-    }
-    setUserReviews(prev => [entry, ...prev])
     
-    // Save rating and review to user library
-    if (isAuthenticated) {
-      rateBook(book, ratingValue)
-      reviewBook(book, reviewForm.body.trim())
+    // If editing, update existing review; otherwise create new one
+    if (isEditingReview && editingReviewId && userReview) {
+      const updatedReview = {
+        ...userReview,
+        rating: ratingValue,
+        review: reviewForm.body.trim(),
+        updatedAt: createdAt,
+        relativeTime: toRelativeTime(createdAt)
+      }
+      
+      // Update in state
+      setUserReviews(prev => 
+        prev.map(r => r.id === editingReviewId ? updatedReview : r)
+      )
+      
+      // Save to localStorage
+      saveReviewToStorage(updatedReview, book.isbn)
+      
+      // Update in user library
+      if (isAuthenticated) {
+        rateBook(book, ratingValue)
+        reviewBook(book, reviewForm.body.trim())
+      }
+      
+      setIsEditingReview(false)
+      setEditingReviewId(null)
+    } else {
+      // Only create new review if user doesn't have one
+      if (userReview) {
+        alert('You already have a review for this book. Please edit your existing review.')
+        return
+      }
+      
+      const entry = {
+        id: `user-${Date.now()}-${book.isbn}`,
+        bookIsbn: book.isbn,
+        userId: userId,
+        reviewer: isAuthenticated ? (user?.name || user?.email?.split('@')[0] || 'You') : 'Reader',
+        rating: ratingValue,
+        review: reviewForm.body.trim(),
+        likes: 0,
+        createdAt: createdAt,
+        relativeTime: toRelativeTime(createdAt),
+        replies: []
+      }
+      
+      // Add new review
+      setUserReviews(prev => [entry, ...prev])
+      
+      // Save to localStorage
+      saveReviewToStorage(entry, book.isbn)
+      
+      // Save rating and review to user library
+      if (isAuthenticated) {
+        rateBook(book, ratingValue)
+        reviewBook(book, reviewForm.body.trim())
+      }
     }
     
     setReviewForm({ rating: '0', body: '' })
   }
 
+  const handleEditReview = () => {
+    if (!userReview) return
+    
+    setIsEditingReview(true)
+    setEditingReviewId(userReview.id)
+    setReviewForm({
+      rating: userReview.rating.toFixed(1),
+      body: userReview.review || ''
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingReview(false)
+    setEditingReviewId(null)
+    setReviewForm({ rating: '0', body: '' })
+    if (bookStatus.rated && bookStatus.rating) {
+      setReviewForm(prev => ({ ...prev, rating: bookStatus.rating.toFixed(1) }))
+    }
+  }
+
+  const handleDeleteReview = () => {
+    if (!userReview || !window.confirm('Are you sure you want to delete your review?')) return
+    
+    // Remove from state
+    setUserReviews(prev => prev.filter(r => r.id !== userReview.id))
+    
+    // Remove from localStorage
+    deleteReviewFromStorage(userReview.id, book.isbn)
+    
+    // Clear user library review status
+    if (isAuthenticated && book?.isbn) {
+      unreviewBook(book.isbn)
+    }
+    
+    setIsEditingReview(false)
+    setEditingReviewId(null)
+    setReviewForm({ rating: '0', body: '' })
+  }
+
   return (
-    <div className="book-details-page">
+    <div className="book-details-page gradient-bg-vertical">
       <div className="book-details-container">
         {/* Main Content Grid */}
         <div className="book-details-grid">
@@ -402,6 +506,71 @@ export default function BookDetails() {
                 <p className="panel-eyebrow">Recent user reviews</p>
               </div>
 
+              {/* Show user's review first if it exists and not editing */}
+              {userReview && !isEditingReview && (
+                <article className="review-entry compact" style={{ marginBottom: '2rem', border: '2px solid var(--gold)', borderRadius: '8px', padding: '1rem' }}>
+                  <div className="review-badge">
+                    <span className="review-rating-chip subtle">{userReview.rating.toFixed(1)}/5</span>
+                    <div className="review-stars small" aria-label={`Rated ${userReview.rating} out of 5`}>
+                      {buildStarState(userReview.rating).map((state, index) => (
+                        <span key={index} className={`star ${state}`}>★</span>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.5rem' }}>
+                      {['Edit', 'Delete'].map((label) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={label === 'Edit' ? handleEditReview : handleDeleteReview}
+                          style={{
+                            background: 'var(--gold)',
+                            color: 'var(--dark-maroon)',
+                            border: 'none',
+                            padding: '0.375rem 0.75rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'opacity 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                          onMouseLeave={(e) => e.target.style.opacity = '1'}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="review-content">
+                    <div className="review-row">
+                      <p className="review-author" style={{ fontWeight: 600 }}>Your Review</p>
+                      <span className="review-meta">{userReview.relativeTime}</span>
+                    </div>
+                    <p className="review-body">{cleanReviewText(userReview.review)}</p>
+                    <ReviewActions
+                      review={userReview}
+                      activeThread={activeThread}
+                      heartedReviews={heartedReviews}
+                      onToggleThread={handleToggleThread}
+                      onHeartReview={handleHeartReview}
+                    />
+                    <ReviewThread
+                      review={userReview}
+                      activeThread={activeThread}
+                      replyDrafts={replyDrafts}
+                      heartedReplies={heartedReplies}
+                      onToggleThread={handleToggleThread}
+                      onReplyDraftChange={handleReplyDraftChange}
+                      onReplySubmit={handleReplySubmit}
+                      onHeartReply={handleHeartReply}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  </div>
+                </article>
+              )}
+
+              {/* Show review form only if user doesn't have a review OR is editing their review */}
+              {(!userReview || isEditingReview) && (
               <form id="reviewComposer" className="review-composer" onSubmit={handleReviewSubmit}>
                     <div className="composer-row">
                       <label>
@@ -437,29 +606,54 @@ export default function BookDetails() {
                         )
                       })}
                     </div>
-                    <button
-                      type="button"
-                      className="reviews-banner-btn secondary"
-                      onClick={handleRatingOnly}
-                    >
-                      {bookStatus.rated ? `Update to ${reviewForm.rating}/5` : `Rate ${reviewForm.rating}/5`}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        className="reviews-banner-btn secondary"
+                        onClick={handleRatingOnly}
+                      >
+                        {bookStatus.rated ? `Update to ${reviewForm.rating}/5` : `Rate ${reviewForm.rating}/5`}
+                      </button>
+                      {bookStatus.rated && (
+                        <button
+                          type="button"
+                          className="reviews-banner-btn secondary"
+                          onClick={handleUnrate}
+                        >
+                          Unrate
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <textarea
                     name="body"
-                    placeholder="Share your read. What resonated? What didn't? (Optional)"
+                    placeholder={isEditingReview ? "Edit your review..." : "Share your read. What resonated? What didn't? (Optional)"}
                     rows={3}
                     value={reviewForm.body}
                     onChange={handleReviewChange}
+                    disabled={userReview && !isEditingReview}
                   />
-                  <button
-                    type="submit"
-                    className="reviews-banner-btn primary"
-                    disabled={!reviewForm.body.trim() && !bookStatus.rated}
-                  >
-                    {reviewForm.body.trim() ? 'Post review' : bookStatus.rated ? 'Update rating' : 'Post review'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="submit"
+                      className="reviews-banner-btn primary"
+                      disabled={(!reviewForm.body.trim() && !bookStatus.rated) || (userReview && !isEditingReview)}
+                    >
+                      {isEditingReview ? 'Update Review' : (reviewForm.body.trim() ? 'Post review' : bookStatus.rated ? 'Update rating' : 'Post review')}
+                    </button>
+                    {isEditingReview && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="reviews-banner-btn secondary"
+                        style={{ marginLeft: '0.5rem' }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 </form>
+              )}
 
               <div className="review-list recent">
                 {recentReviews.map((review) => (
@@ -477,100 +671,51 @@ export default function BookDetails() {
                         <p className="review-author">{review.reviewer}</p>
                         <span className="review-meta">{review.relativeTime}</span>
                       </div>
-                      <p className="review-body">{review.review?.replace(/\s*\)\}/g, '')}</p>
-                      <div className="review-actions">
-                        <button
-                          type="button"
-                          className="review-action"
-                          onClick={() => handleToggleThread(review.id)}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"/>
-                          </svg>
-                          {review.replies?.length || 0}
-                        </button>
-                        <button
-                          type="button"
-                          className="review-action"
-                          onClick={() => handleHeartReview(review.id)}
-                          aria-pressed={heartedReviews[review.id] || false}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                          </svg>
-                          {review.likes || 0}
-                        </button>
-                      </div>
-                      {activeThread === review.id && (
-                        <div className="review-thread">
-                          <div className="thread-replies">
-                            {review.replies?.length ? (
-                              review.replies.map((reply) => (
-                                <div key={reply.id} className="thread-reply">
-                                  <div className="thread-reply-meta">
-                                    <span className="thread-reply-author">{reply.author}</span>
-                                    <span className="thread-reply-time">{reply.timestamp}</span>
-                                  </div>
-                                  <p className="thread-reply-body">{reply.body?.replace(/\s*\)\}/g, '')}</p>
-                                  <div className="thread-reply-actions">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleHeartReply(review.id, reply.id)}
-                                      aria-pressed={heartedReplies[reply.id] || false}
-                                    >
-                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                      </svg>
-                                      {reply.likes || 0}
-                                    </button>
-                </div>
-              </div>
-                              ))
-                            ) : (
-                              <p className="thread-empty">No replies yet. Start the conversation.</p>
-                            )}
-                          </div>
-                          <form className="thread-form" onSubmit={(event) => handleReplySubmit(event, review.id)}>
-                            <textarea
-                              rows={2}
-                              placeholder="Add a reply"
-                              value={replyDrafts[review.id] || ''}
-                              onChange={(event) => handleReplyDraftChange(review.id, event.target.value)}
-                            />
-                            <button type="submit" disabled={!replyDrafts[review.id]?.trim()}>
-                              Reply
-                            </button>
-                          </form>
-                        </div>
-                      )}
+                      <p className="review-body">{cleanReviewText(review.review)}</p>
+                      <ReviewActions
+                        review={review}
+                        activeThread={activeThread}
+                        heartedReviews={heartedReviews}
+                        onToggleThread={handleToggleThread}
+                        onHeartReview={handleHeartReview}
+                      />
+                      <ReviewThread
+                        review={review}
+                        activeThread={activeThread}
+                        replyDrafts={replyDrafts}
+                        heartedReplies={heartedReplies}
+                        onToggleThread={handleToggleThread}
+                        onReplyDraftChange={handleReplyDraftChange}
+                        onReplySubmit={handleReplySubmit}
+                        onHeartReply={handleHeartReply}
+                        isAuthenticated={isAuthenticated}
+                      />
                     </div>
                   </article>
             ))}
           </div>
           
           {/* View More Reviews Button */}
-          {userReviews.length > recentReviews.length && (
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-              <button
-                onClick={() => navigate(`/book/isbn/${book.isbn}/reviews`)}
-                style={{
-                  background: 'var(--gold)',
-                  color: 'var(--dark-maroon)',
-                  border: 'none',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.target.style.opacity = '1'}
-              >
-                View More Reviews ({userReviews.length - recentReviews.length} more)
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <button
+              onClick={() => navigate(`/book/isbn/${book.isbn}/reviews`)}
+              style={{
+                background: 'var(--gold)',
+                color: 'var(--dark-maroon)',
+                border: 'none',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'opacity 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+              onMouseLeave={(e) => e.target.style.opacity = '1'}
+            >
+              View More Reviews {userReviews.length > recentReviews.length ? `(${userReviews.length - recentReviews.length} more)` : userReviews.length > 0 ? `(${userReviews.length} total)` : ''}
+            </button>
+          </div>
         </div>
           </div>
         </section>

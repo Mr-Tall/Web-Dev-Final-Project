@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import resourcesData from '../../data/resources/resources.json'
 import APP_CONFIG from '../../config/constants'
 import { useBooks } from '../../context/BooksContext'
+<<<<<<< HEAD
 import { useAuth } from '../../context/AuthContext'
+=======
+import '../../styles/common.css'
+>>>>>>> 40172c86ebd8cafea37943d4c50da81f3e2bfe08
 import './Home.css'
 
 function Home() {
@@ -59,7 +63,7 @@ function Home() {
   }
 
   return (
-    <div className="home">
+    <div className="home gradient-bg-vertical">
       <div className="home-content">
         {/* NEW RELEASES Section - AOTY Style */}
         <section className="new-releases-section">
