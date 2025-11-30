@@ -549,28 +549,26 @@ export default function BookDetails() {
           </div>
           
           {/* View More Reviews Button */}
-          {userReviews.length > recentReviews.length && (
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-              <button
-                onClick={() => navigate(`/book/isbn/${book.isbn}/reviews`)}
-                style={{
-                  background: 'var(--gold)',
-                  color: 'var(--dark-maroon)',
-                  border: 'none',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'opacity 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.target.style.opacity = '1'}
-              >
-                View More Reviews ({userReviews.length - recentReviews.length} more)
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <button
+              onClick={() => navigate(`/book/isbn/${book.isbn}/reviews`)}
+              style={{
+                background: 'var(--gold)',
+                color: 'var(--dark-maroon)',
+                border: 'none',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'opacity 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+              onMouseLeave={(e) => e.target.style.opacity = '1'}
+            >
+              View More Reviews {userReviews.length > recentReviews.length ? `(${userReviews.length - recentReviews.length} more)` : ''}
+            </button>
+          </div>
         </div>
           </div>
         </section>
