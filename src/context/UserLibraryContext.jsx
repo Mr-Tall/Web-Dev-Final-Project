@@ -119,6 +119,23 @@ export function UserLibraryProvider({ children }) {
     return true
   }, [isAuthenticated])
 
+  const unrateBook = useCallback((isbn) => {
+    if (!isAuthenticated) return false
+
+    setLibrary(prev => {
+      const updated = { ...prev }
+      if (updated[isbn]) {
+        updated[isbn] = { ...updated[isbn], rated: false, rating: null, ratingLabel: '—' }
+        // If book has no other status, remove it
+        if (!updated[isbn].saved && !updated[isbn].favorite && !updated[isbn].reviewed) {
+          delete updated[isbn]
+        }
+      }
+      return updated
+    })
+    return true
+  }, [isAuthenticated])
+
   const reviewBook = useCallback((book, review) => {
     if (!isAuthenticated) return false
 
@@ -132,6 +149,23 @@ export function UserLibraryProvider({ children }) {
         reviewedAt: new Date().toISOString()
       }
     }))
+    return true
+  }, [isAuthenticated])
+
+  const unreviewBook = useCallback((isbn) => {
+    if (!isAuthenticated) return false
+
+    setLibrary(prev => {
+      const updated = { ...prev }
+      if (updated[isbn]) {
+        updated[isbn] = { ...updated[isbn], reviewed: false, review: undefined }
+        // If book has no other status, remove it
+        if (!updated[isbn].saved && !updated[isbn].favorite && !updated[isbn].rated) {
+          delete updated[isbn]
+        }
+      }
+      return updated
+    })
     return true
   }, [isAuthenticated])
 
@@ -168,7 +202,9 @@ export function UserLibraryProvider({ children }) {
     favoriteBook,
     unfavoriteBook,
     rateBook,
+    unrateBook,
     reviewBook,
+    unreviewBook,
     getBookStatus,
     getAllBooks
   }
