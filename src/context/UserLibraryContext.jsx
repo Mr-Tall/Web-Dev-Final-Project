@@ -190,8 +190,9 @@ export function UserLibraryProvider({ children }) {
     if (!library || typeof library !== 'object') {
       return []
     }
+    // Only include books that are saved, favorited, or rated above 3 (exclude reviewed-only books)
     return Object.values(library).filter(book => 
-      book && (book.saved || book.favorite || book.rated || book.reviewed)
+      book && (book.saved || book.favorite || (book.rated && book.rating > 3))
     )
   }, [library])
 

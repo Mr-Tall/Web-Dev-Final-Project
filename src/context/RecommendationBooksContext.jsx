@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import fetchBooksCatalog from '../services/booksApi'
+import { createCacheManager } from '../utils/storageUtils'
 
 const RecommendationBooksContext = createContext(null)
 
@@ -7,33 +8,7 @@ const CACHE_KEY = 'bc_recommendation_books_cache'
 const CACHE_TIMESTAMP_KEY = 'bc_recommendation_books_cache_timestamp'
 const CACHE_DURATION = 60 * 60 * 1000 // 1 hour in milliseconds
 
-function getCachedBooks() {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY)
-    const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
-    
-    if (cached && timestamp) {
-      const age = Date.now() - parseInt(timestamp, 10)
-      if (age < CACHE_DURATION) {
-        return JSON.parse(cached)
-      }
-      localStorage.removeItem(CACHE_KEY)
-      localStorage.removeItem(CACHE_TIMESTAMP_KEY)
-    }
-  } catch (err) {
-    console.error('Error reading recommendation cache:', err)
-  }
-  return null
-}
-
-function setCachedBooks(books) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(books))
-    localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
-  } catch (err) {
-    console.error('Error writing recommendation cache:', err)
-  }
-}
+const cache = createCacheManager(CACHE_KEY, CACHE_TIMESTAMP_KEY, CACHE_DURATION)
 
 export function RecommendationBooksProvider({ children }) {
   const [books, setBooks] = useState([])
@@ -43,7 +18,7 @@ export function RecommendationBooksProvider({ children }) {
   useEffect(() => {
     let active = true
     
-    const cachedBooks = getCachedBooks()
+    const cachedBooks = cache.get()
     if (cachedBooks && cachedBooks.length > 0) {
       setBooks(cachedBooks)
       setLoading(false)
@@ -56,7 +31,7 @@ export function RecommendationBooksProvider({ children }) {
         if (active && fetched && fetched.length > 0) {
           console.log('Number of recommendation books fetched:', fetched.length)
           setBooks(fetched)
-          setCachedBooks(fetched)
+          cache.set(fetched)
         }
       } catch (err) {
         if (active) {
