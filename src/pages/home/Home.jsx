@@ -117,6 +117,15 @@ function Home() {
               <article 
                 key={item.id} 
                 className="newsworthy-card"
+                onClick={() => {
+                  if (item.externalUrl) {
+                    window.open(item.externalUrl, '_blank', 'noopener,noreferrer')
+                  } else {
+                    navigate(`/resources/${item.id}`)
+                    window.scrollTo(0, 0)
+                  }
+                }}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="newsworthy-image" style={{ backgroundColor: getCategoryColor(item.category) }}>
                   <div className="resource-icon">{getCategoryIcon(item.category)}</div>

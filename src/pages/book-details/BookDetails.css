@@ -550,6 +550,72 @@
   gap: 0.25rem;
 }
 
+.thread-reply-edit-btn,
+.thread-reply-delete-btn {
+  background: var(--gold);
+  color: var(--dark-maroon);
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.thread-reply-edit-btn:hover,
+.thread-reply-delete-btn:hover {
+  opacity: 0.9;
+}
+
+.thread-reply-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.thread-reply-edit-form textarea {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0.65rem;
+  resize: vertical;
+  min-height: 60px;
+  background: #ffffff;
+  color: #111;
+}
+
+.thread-reply-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.thread-reply-edit-actions button {
+  border: none;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.thread-reply-edit-actions button[type="submit"] {
+  background: linear-gradient(90deg, #ffe7b2, var(--gold));
+  color: #2f1a11;
+}
+
+.thread-reply-edit-actions button[type="button"] {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.thread-reply-edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .thread-empty {
   margin: 0;
   font-size: 0.85rem;

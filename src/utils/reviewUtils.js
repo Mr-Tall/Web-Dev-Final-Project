@@ -2,6 +2,8 @@ import { normalizeIsbn, generateTimestamp, toRelativeTime } from './bookUtils'
 
 // Storage key for reviews
 export const STORAGE_KEY_REVIEWS = 'libraryCatalog_allReviews'
+export const STORAGE_KEY_HEARTED_REVIEWS = 'libraryCatalog_heartedReviews'
+export const STORAGE_KEY_HEARTED_REPLIES = 'libraryCatalog_heartedReplies'
 
 // Clean review text (remove unwanted characters)
 export const cleanReviewText = (text) => {
@@ -128,5 +130,45 @@ export const getAllReviewsForBook = (bookIsbn, userReviewsData) => {
   }
   
   return uniqueReviews
+}
+
+// Load hearted reviews from localStorage
+export const loadHeartedReviews = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_HEARTED_REVIEWS)
+    return stored ? JSON.parse(stored) : {}
+  } catch (error) {
+    console.error('Failed to load hearted reviews from storage:', error)
+    return {}
+  }
+}
+
+// Save hearted reviews to localStorage
+export const saveHeartedReviews = (heartedReviews) => {
+  try {
+    localStorage.setItem(STORAGE_KEY_HEARTED_REVIEWS, JSON.stringify(heartedReviews))
+  } catch (error) {
+    console.error('Failed to save hearted reviews to storage:', error)
+  }
+}
+
+// Load hearted replies from localStorage
+export const loadHeartedReplies = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_HEARTED_REPLIES)
+    return stored ? JSON.parse(stored) : {}
+  } catch (error) {
+    console.error('Failed to load hearted replies from storage:', error)
+    return {}
+  }
+}
+
+// Save hearted replies to localStorage
+export const saveHeartedReplies = (heartedReplies) => {
+  try {
+    localStorage.setItem(STORAGE_KEY_HEARTED_REPLIES, JSON.stringify(heartedReplies))
+  } catch (error) {
+    console.error('Failed to save hearted replies to storage:', error)
+  }
 }
 

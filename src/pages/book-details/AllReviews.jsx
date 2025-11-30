@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import userReviewsData from '../../data/reviews/userReviews.json'
-import { isbnMatches } from '../../utils/bookUtils'
-import { buildStarState, getAllReviewsForBook, cleanReviewText } from '../../utils/reviewUtils'
+import { isbnMatches, toRelativeTime } from '../../utils/bookUtils'
+import { buildStarState, getAllReviewsForBook, cleanReviewText, saveReviewToStorage, loadHeartedReviews, saveHeartedReviews, loadHeartedReplies, saveHeartedReplies } from '../../utils/reviewUtils'
 import { ReviewThread, ReviewActions } from '../../components/common/ReviewThread'
 import { useBooks } from '../../context/BooksContext'
 import { useAuth } from '../../context/AuthContext'
@@ -12,7 +12,7 @@ export default function AllReviews() {
   const { isbn } = useParams()
   const navigate = useNavigate()
   const { books, loading } = useBooks()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   // Find the book by ISBN
   const book = useMemo(() => {
@@ -21,15 +21,24 @@ export default function AllReviews() {
   }, [isbn, books, loading])
 
   // Get all reviews for this book (using same logic as BookDetails)
-  const allReviews = useMemo(() => {
+  const allReviewsData = useMemo(() => {
     if (!book) return []
     return getAllReviewsForBook(book.isbn, userReviewsData)
   }, [book])
 
+  const [allReviews, setAllReviews] = useState([])
   const [activeThread, setActiveThread] = useState(null)
   const [replyDrafts, setReplyDrafts] = useState({})
-  const [heartedReviews, setHeartedReviews] = useState({})
-  const [heartedReplies, setHeartedReplies] = useState({})
+  const [replyEditDrafts, setReplyEditDrafts] = useState({})
+  const [editingReplyId, setEditingReplyId] = useState(null)
+  const [heartedReviews, setHeartedReviews] = useState(() => loadHeartedReviews())
+  const [heartedReplies, setHeartedReplies] = useState(() => loadHeartedReplies())
+
+  useEffect(() => {
+    if (allReviewsData.length > 0) {
+      setAllReviews(allReviewsData)
+    }
+  }, [allReviewsData])
 
   const handleToggleThread = (reviewId) => {
     setActiveThread(prev => (prev === reviewId ? null : reviewId))
@@ -44,26 +53,174 @@ export default function AllReviews() {
     const text = replyDrafts[reviewId]?.trim()
     if (!text) return
 
+    const userId = isAuthenticated && user ? (user.uid || user.email) : null
+    const authorName = isAuthenticated ? (user?.name || user?.email?.split('@')[0] || 'You') : 'Reader'
+
     const reply = {
       id: `${reviewId}-reply-${Date.now()}`,
-      author: 'Reader',
+      userId: userId,
+      author: authorName,
       body: text,
-      timestamp: 'moments ago'
+      timestamp: toRelativeTime(new Date().toISOString()),
+      likes: 0
     }
 
-    // In a real app, this would update the reviews state
-    // For now, we'll just clear the draft
+    setAllReviews(prev => {
+      const updated = prev.map(review =>
+        review.id === reviewId
+          ? { ...review, replies: [...(review.replies || []), reply] }
+          : review
+      )
+      
+      const reviewWithReply = updated.find(r => r.id === reviewId)
+      if (reviewWithReply && book?.isbn) {
+        saveReviewToStorage(reviewWithReply, book.isbn)
+      }
+      
+      return updated
+    })
     setReplyDrafts(prev => ({ ...prev, [reviewId]: '' }))
+  }
+
+  const handleEditReply = (reviewId, replyId) => {
+    const review = allReviews.find(r => r.id === reviewId)
+    const reply = review?.replies?.find(r => r.id === replyId)
+    if (!reply) return
+
+    setEditingReplyId(replyId)
+    setReplyEditDrafts(prev => ({ ...prev, [replyId]: reply.body }))
+  }
+
+  const handleCancelEditReply = () => {
+    setEditingReplyId(null)
+    setReplyEditDrafts(prev => {
+      const newDrafts = { ...prev }
+      if (editingReplyId) {
+        delete newDrafts[editingReplyId]
+      }
+      return newDrafts
+    })
+  }
+
+  const handleUpdateReply = (reviewId, replyId) => {
+    const text = replyEditDrafts[replyId]?.trim()
+    if (!text) return
+
+    setAllReviews(prev => {
+      const updated = prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              replies: review.replies.map(reply =>
+                reply.id === replyId
+                  ? {
+                      ...reply,
+                      body: text,
+                      timestamp: toRelativeTime(new Date().toISOString())
+                    }
+                  : reply
+              )
+            }
+          : review
+      )
+      
+      const reviewWithUpdatedReply = updated.find(r => r.id === reviewId)
+      if (reviewWithUpdatedReply && book?.isbn) {
+        saveReviewToStorage(reviewWithUpdatedReply, book.isbn)
+      }
+      
+      return updated
+    })
+    
+    setEditingReplyId(null)
+    setReplyEditDrafts(prev => {
+      const newDrafts = { ...prev }
+      delete newDrafts[replyId]
+      return newDrafts
+    })
+  }
+
+  const handleDeleteReply = (reviewId, replyId) => {
+    if (!window.confirm('Are you sure you want to delete this reply?')) return
+
+    setAllReviews(prev => {
+      const updated = prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              replies: review.replies.filter(reply => reply.id !== replyId)
+            }
+          : review
+      )
+      
+      const reviewWithDeletedReply = updated.find(r => r.id === reviewId)
+      if (reviewWithDeletedReply && book?.isbn) {
+        saveReviewToStorage(reviewWithDeletedReply, book.isbn)
+      }
+      
+      return updated
+    })
   }
 
   const handleHeartReview = (reviewId) => {
     const alreadyHearted = heartedReviews[reviewId]
-    setHeartedReviews(prev => ({ ...prev, [reviewId]: !alreadyHearted }))
+    const updatedHearted = { ...heartedReviews, [reviewId]: !alreadyHearted }
+    
+    setAllReviews(prev => {
+      const updated = prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              likes: Math.max(0, (review.likes || 0) + (alreadyHearted ? -1 : 1))
+            }
+          : review
+      )
+      
+      // Persist the updated review with new like count
+      const reviewWithUpdatedLikes = updated.find(r => r.id === reviewId)
+      if (reviewWithUpdatedLikes && book?.isbn) {
+        saveReviewToStorage(reviewWithUpdatedLikes, book.isbn)
+      }
+      
+      return updated
+    })
+    
+    setHeartedReviews(updatedHearted)
+    saveHeartedReviews(updatedHearted)
   }
 
   const handleHeartReply = (reviewId, replyId) => {
     const alreadyHearted = heartedReplies[replyId]
-    setHeartedReplies(prev => ({ ...prev, [replyId]: !alreadyHearted }))
+    const updatedHearted = { ...heartedReplies, [replyId]: !alreadyHearted }
+    
+    setAllReviews(prev => {
+      const updated = prev.map(review =>
+        review.id === reviewId
+          ? {
+              ...review,
+              replies: review.replies.map(reply =>
+                reply.id === replyId
+                  ? {
+                      ...reply,
+                      likes: Math.max(0, (reply.likes || 0) + (alreadyHearted ? -1 : 1))
+                    }
+                  : reply
+              )
+            }
+          : review
+      )
+      
+      // Persist the updated review with reply's new like count
+      const reviewWithUpdatedReply = updated.find(r => r.id === reviewId)
+      if (reviewWithUpdatedReply && book?.isbn) {
+        saveReviewToStorage(reviewWithUpdatedReply, book.isbn)
+      }
+      
+      return updated
+    })
+    
+    setHeartedReplies(updatedHearted)
+    saveHeartedReplies(updatedHearted)
   }
 
   if (loading || !books || books.length === 0) {
@@ -158,12 +315,20 @@ export default function AllReviews() {
                           review={review}
                           activeThread={activeThread}
                           replyDrafts={replyDrafts}
+                          replyEditDrafts={replyEditDrafts}
+                          editingReplyId={editingReplyId}
                           heartedReplies={heartedReplies}
                           onToggleThread={handleToggleThread}
                           onReplyDraftChange={handleReplyDraftChange}
+                          onReplyEditDraftChange={(replyId, text) => setReplyEditDrafts(prev => ({ ...prev, [replyId]: text }))}
                           onReplySubmit={handleReplySubmit}
+                          onEditReply={handleEditReply}
+                          onUpdateReply={handleUpdateReply}
+                          onCancelEditReply={handleCancelEditReply}
+                          onDeleteReply={handleDeleteReply}
                           onHeartReply={handleHeartReply}
                           isAuthenticated={isAuthenticated}
+                          user={user}
                         />
                       </div>
                     </article>
