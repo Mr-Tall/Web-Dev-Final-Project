@@ -465,6 +465,7 @@ function BookReviews() {
                       isOpen={isTimeRangeModalOpen}
                       onClose={() => setIsTimeRangeModalOpen(false)}
                       onSelect={handleTimeRangeSelect}
+                      currentSelection={selectedTimeRange}
                     />
                   )}
                 </div>

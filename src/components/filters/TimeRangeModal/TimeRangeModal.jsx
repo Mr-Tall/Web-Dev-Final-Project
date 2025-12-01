@@ -1,11 +1,42 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './TimeRangeModal.css'
 
-function TimeRangeModal({ isOpen, onClose, onSelect }) {
+function TimeRangeModal({ isOpen, onClose, onSelect, currentSelection }) {
   const [selectedOption, setSelectedOption] = useState('All-time')
   const [customStartYear, setCustomStartYear] = useState('')
   const [customEndYear, setCustomEndYear] = useState('')
   const [showCustomRange, setShowCustomRange] = useState(false)
+
+  // Sync with current selection when modal opens
+  useEffect(() => {
+    if (isOpen && currentSelection) {
+      if (currentSelection === 'All-time' || currentSelection === 'all-time') {
+        setSelectedOption('All-time')
+        setShowCustomRange(false)
+      } else if (currentSelection === 'This Year') {
+        setSelectedOption('This Year')
+        setShowCustomRange(false)
+      } else if (currentSelection === 'Last Year') {
+        setSelectedOption('Last Year')
+        setShowCustomRange(false)
+      } else if (currentSelection.includes('-') && !currentSelection.includes('s')) {
+        // Custom range format: "2020-2024"
+        setSelectedOption('Custom Range')
+        const [start, end] = currentSelection.split('-')
+        setCustomStartYear(start.trim())
+        setCustomEndYear(end.trim())
+        setShowCustomRange(true)
+      } else {
+        // Default to All-time for unknown formats
+        setSelectedOption('All-time')
+        setShowCustomRange(false)
+      }
+    } else if (isOpen) {
+      // Default to All-time if no current selection
+      setSelectedOption('All-time')
+      setShowCustomRange(false)
+    }
+  }, [isOpen, currentSelection])
 
   if (!isOpen) return null
 
