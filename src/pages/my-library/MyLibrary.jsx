@@ -83,15 +83,30 @@ export default function MyLibrary() {
           ))).toFixed(1)
         : '0.0'
 
-    // Calculate favorite genre
-    const genreCounts = {}
+    // Calculate favorite genre weighted by ratings
+    // Ratings >= 3 stars: positive impact (rating - 2.5, so 3 = +0.5, 4 = +1.5, 5 = +2.5)
+    // Ratings < 3 stars: negative impact (-(3 - rating), so 2 = -1, 1 = -2, 0 = -3)
+    const genreWeights = {}
     libraryBooksWithDetails.forEach(book => {
-      if (book.genre) {
-        genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1
+      if (book.genre && book.rated && book.rating !== undefined && book.rating !== null) {
+        const rating = Math.min(5, Math.max(0, book.rating))
+        let weight = 0
+        
+        if (rating >= 3) {
+          // Positive impact: rating - 2.5 (centered around 3)
+          weight = rating - 2.5
+        } else {
+          // Negative impact: -(3 - rating)
+          weight = -(3 - rating)
+        }
+        
+        genreWeights[book.genre] = (genreWeights[book.genre] || 0) + weight
       }
     })
-    const favoriteGenre = Object.keys(genreCounts).length > 0
-      ? Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a : b)
+    
+    // Find genre with highest weight
+    const favoriteGenre = Object.keys(genreWeights).length > 0
+      ? Object.keys(genreWeights).reduce((a, b) => genreWeights[a] > genreWeights[b] ? a : b)
       : '—'
 
     return {

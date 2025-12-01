@@ -16,10 +16,49 @@ export function UserLibraryProvider({ children }) {
       return
     }
 
-    try {
+      try {
       const stored = localStorage.getItem(`${STORAGE_KEY}_${user.uid || user.email}`)
       if (stored) {
-        setLibrary(JSON.parse(stored))
+        const parsedLibrary = JSON.parse(stored)
+        
+        // Clean library: remove books that don't have valid saved/favorite/rated/reviewed status
+        const cleanedLibrary = {}
+        Object.keys(parsedLibrary).forEach(isbn => {
+          const book = parsedLibrary[isbn]
+          if (!book) return
+          
+          // Check if book has valid status
+          const isSaved = book.saved === true
+          const isFavorite = book.favorite === true
+          const isRated = book.rated === true && book.rating !== undefined && book.rating !== null && book.rating > 0
+          const isReviewed = book.reviewed === true && book.review && book.review.trim().length > 0
+          
+          // Only keep books with at least one valid status
+          if (isSaved || isFavorite || isRated || isReviewed) {
+            cleanedLibrary[isbn] = book
+          } else {
+            // Debug: Log books being removed
+            console.log('Removing book from library (no valid status):', {
+              isbn: book.isbn,
+              title: book.title,
+              saved: book.saved,
+              favorite: book.favorite,
+              rated: book.rated,
+              rating: book.rating,
+              reviewed: book.reviewed,
+              hasReview: !!(book.review && book.review.trim().length > 0)
+            })
+          }
+        })
+        
+        // Only set library if it changed (to avoid infinite loops)
+        if (Object.keys(cleanedLibrary).length !== Object.keys(parsedLibrary).length) {
+          // Save cleaned library back to localStorage
+          localStorage.setItem(`${STORAGE_KEY}_${user.uid || user.email}`, JSON.stringify(cleanedLibrary))
+          setLibrary(cleanedLibrary)
+        } else {
+          setLibrary(parsedLibrary)
+        }
       }
     } catch (error) {
       console.error('Failed to load user library:', error)
@@ -226,10 +265,34 @@ export function UserLibraryProvider({ children }) {
     if (!library || typeof library !== 'object') {
       return []
     }
-    // Include all books that are saved, favorited, rated, or reviewed
-    return Object.values(library).filter(book => 
-      book && (book.saved || book.favorite || book.rated || book.reviewed)
-    )
+    // Include all books that are saved, favorited, rated (with actual rating > 0), or reviewed (with actual review text)
+    return Object.values(library).filter(book => {
+      if (!book) return false
+      
+      // Must have at least one valid status
+      const isSaved = book.saved === true
+      const isFavorite = book.favorite === true
+      const isRated = book.rated === true && book.rating !== undefined && book.rating !== null && book.rating > 0
+      const isReviewed = book.reviewed === true && book.review && book.review.trim().length > 0
+      
+      const isValid = isSaved || isFavorite || isRated || isReviewed
+      
+      // Debug: Log books that are being filtered
+      if (!isValid && book.isbn) {
+        console.log('Filtering out book from getAllBooks (no valid status):', {
+          isbn: book.isbn,
+          title: book.title,
+          saved: book.saved,
+          favorite: book.favorite,
+          rated: book.rated,
+          rating: book.rating,
+          reviewed: book.reviewed,
+          hasReview: !!(book.review && book.review.trim().length > 0)
+        })
+      }
+      
+      return isValid
+    })
   }, [library])
 
   const value = {

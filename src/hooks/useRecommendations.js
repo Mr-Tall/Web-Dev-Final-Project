@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import { useRecommendationBooks } from '../context/RecommendationBooksContext';
 import { generateTieredRecommendations } from '../engine/recommendationEngine';
-import { getStorageJSON, setStorageItem, removeStorageItem } from '../utils/storageUtils';
+import { removeStorageItem } from '../utils/storageUtils';
 
 const CACHE_PREFIX = 'bc_user_recommendations';
 
@@ -19,76 +19,78 @@ export default function useRecommendations(batchSize = 300) {
   // Create a stable hash of the user's library that includes all relevant data
   const createLibraryHash = (books) => {
     if (!books || books.length === 0) return 'empty';
-    // Include ISBN, saved, favorite, and rating status to detect any changes
+    // Include ISBN, saved, favorite, rating (with precision), and reviewed status to detect any changes
+    // Use toFixed(1) for rating to ensure consistent hashing
     return books
-      .map(b => `${b.isbn}:${b.saved ? 's' : ''}${b.favorite ? 'f' : ''}${b.rated ? `r${b.rating || 0}` : ''}`)
+      .map(b => {
+        const rating = b.rated && b.rating !== undefined && b.rating !== null 
+          ? `r${Number(b.rating).toFixed(1)}` 
+          : '';
+        const reviewed = b.reviewed ? 'v' : '';
+        return `${b.isbn}:${b.saved ? 's' : ''}${b.favorite ? 'f' : ''}${rating}${reviewed}`;
+      })
       .sort()
       .join(',');
   };
 
-  // Load from cache on initial mount only, but verify user has books first
+  // Clear any existing cache on mount
   useEffect(() => {
-    const userBooks = getAllBooks();
-    // Only load from cache if user actually has relevant books
-    if (!userBooks || userBooks.length === 0) {
-      // Clear any stale cache
-      removeStorageItem(cacheKey);
-      return;
-    }
-
-    const cached = getStorageJSON(cacheKey);
-    if (cached && cached.length > 0) {
-      setRecommendations(cached);
-    }
-  }, [cacheKey, getAllBooks]);
-
-  // Helper function to clear cache and recommendations
-  const clearCache = () => {
-    setRecommendations([]);
     removeStorageItem(cacheKey);
-  };
+  }, [cacheKey]);
 
-  // Regenerate recommendations whenever library or allBooks change
+  // Regenerate recommendations whenever library or allBooks change - NO CACHING
   useEffect(() => {
     if (!allBooks || allBooks.length === 0) {
-      clearCache();
+      setRecommendations([]);
       return;
     }
 
+    // Always get fresh user books data
     const userBooks = getAllBooks();
     const currentHash = createLibraryHash(userBooks);
 
-    // If user has no relevant books, clear recommendations and cache
+    // If user has no relevant books, clear recommendations
     if (!userBooks || userBooks.length === 0 || currentHash === 'empty') {
-      clearCache();
+      setRecommendations([]);
       lastLibraryHash.current = currentHash;
       return;
     }
 
-    // Always regenerate if hash changed
-    if (currentHash === lastLibraryHash.current) return;
+    // Only regenerate if hash changed (library actually changed)
+    if (currentHash === lastLibraryHash.current) {
+      return;
+    }
 
-    // Generate new recommendations immediately
+    // Generate new recommendations immediately with fresh data - NO CACHING
     try {
-      const newBatch = generateTieredRecommendations(userBooks, allBooks, batchSize);
+      // Get fresh user books data to ensure we're using latest state
+      const freshUserBooks = getAllBooks();
+      
+      // Debug: Log what books are being used
+      console.log('Generating recommendations with books:', freshUserBooks.map(b => ({
+        isbn: b.isbn,
+        title: b.title,
+        author: b.author,
+        saved: b.saved,
+        favorite: b.favorite,
+        rated: b.rated,
+        rating: b.rating,
+        reviewed: b.reviewed,
+        hasReview: !!(b.review && b.review.trim().length > 0)
+      })));
+      
+      const newBatch = generateTieredRecommendations(freshUserBooks, allBooks, batchSize);
 
       // Update state immediately
       setRecommendations(newBatch);
 
-      // Save to cache (or remove if empty)
-      if (newBatch.length > 0) {
-        setStorageItem(cacheKey, newBatch);
-      } else {
-        removeStorageItem(cacheKey);
-      }
-
-      // Update hash
+      // Update hash to current state
       lastLibraryHash.current = currentHash;
     } catch (err) {
       console.error('Error generating recommendations:', err);
-      clearCache();
+      setRecommendations([]);
     }
-  }, [library, allBooks, batchSize, cacheKey, getAllBooks]);
+  }, [library, allBooks, batchSize, getAllBooks]);
 
   return recommendations
 }

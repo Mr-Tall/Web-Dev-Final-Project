@@ -14,33 +14,57 @@ export function calculateSimilarity(userBooks, candidateBook) {
   const authorMatches = new Set();
 
   userBooks.forEach(userBook => {
-    // Only consider saved, favorited, or rated books with rating > 3
+    // Consider saved, favorited, rated books (rating > 3), or reviewed books (but only if rating >= 3)
     const hasGoodRating = userBook.rated && userBook.rating > 3;
-    const relevant = userBook.saved || userBook.favorite || hasGoodRating;
+    // Only consider reviewed books if they have no rating or rating >= 3
+    const hasReview = userBook.reviewed && userBook.review && (!userBook.rated || userBook.rating >= 3);
+    const relevant = userBook.saved || userBook.favorite || hasGoodRating || hasReview;
     if (!relevant) return;
 
-    // Same genre - give higher weight (2 points) since this is the primary focus
+    // Calculate base weight multiplier based on user engagement
+    // Reviews indicate stronger engagement, so weight them higher
+    let weightMultiplier = 1.0;
+    if (hasReview) {
+      // Books with reviews get 2x weight (stronger signal)
+      weightMultiplier = 2.0;
+    } else if (userBook.rated && userBook.rating) {
+      // Use actual rating value to weight (normalized to 0.5-2.5 range)
+      // Rating 3 = 0.5x, Rating 4 = 1.5x, Rating 5 = 2.5x
+      weightMultiplier = Math.max(0.5, (userBook.rating - 2.5));
+    } else if (userBook.favorite) {
+      // Favorites get 1.5x weight
+      weightMultiplier = 1.5;
+    } else if (userBook.saved) {
+      // Saved books get base weight
+      weightMultiplier = 1.0;
+    }
+
+    // Same genre - give higher weight (2 points base) since this is the primary focus
     if (candidateBook.genre && userBook.genre && candidateBook.genre === userBook.genre) {
-      score += 2;
+      const genreScore = 2 * weightMultiplier;
+      score += genreScore;
       if (!genreMatches.has(candidateBook.genre)) {
         genreMatches.add(candidateBook.genre);
+        const reviewNote = hasReview ? ' (reviewed)' : '';
         reasons.push({
           type: 'genre',
           value: candidateBook.genre,
-          message: `Similar to your ${candidateBook.genre} books`
+          message: `Similar to your ${candidateBook.genre} books${reviewNote}`
         });
       }
     }
 
-    // Same author - secondary factor (1 point)
+    // Same author - secondary factor (1 point base)
     if (candidateBook.author && userBook.author && candidateBook.author === userBook.author) {
-      score += 1;
+      const authorScore = 1 * weightMultiplier;
+      score += authorScore;
       if (!authorMatches.has(candidateBook.author)) {
         authorMatches.add(candidateBook.author);
+        const reviewNote = hasReview ? ' (reviewed)' : '';
         reasons.push({
           type: 'author',
           value: candidateBook.author,
-          message: `Same author as "${userBook.title}"`
+          message: `Same author as "${userBook.title}"${reviewNote}`
         });
       }
     }
@@ -48,14 +72,16 @@ export function calculateSimilarity(userBooks, candidateBook) {
     // Shared genres (if using genres array) - also give higher weight
     if (candidateBook.genres && userBook.genres) {
       const shared = candidateBook.genres.filter(g => userBook.genres.includes(g));
-      score += shared.length * 2; // Higher weight for genre matches
+      const genresScore = shared.length * 2 * weightMultiplier; // Weighted by user engagement
+      score += genresScore;
       shared.forEach(genre => {
         if (!genreMatches.has(genre)) {
           genreMatches.add(genre);
+          const reviewNote = hasReview ? ' (reviewed)' : '';
           reasons.push({
             type: 'genre',
             value: genre,
-            message: `Similar to your ${genre} books`
+            message: `Similar to your ${genre} books${reviewNote}`
           });
         }
       });
