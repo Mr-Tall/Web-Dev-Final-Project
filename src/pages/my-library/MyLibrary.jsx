@@ -81,7 +81,7 @@ export default function MyLibrary() {
     })
     const favoriteGenre = Object.keys(genreCounts).length > 0
       ? Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a : b)
-      : 'Fiction'
+      : '—'
 
     return {
       favorites: favorites || 0,
