@@ -66,7 +66,24 @@ export default function useRecommendations(batchSize = 300) {
       // Get fresh user books data to ensure we're using latest state
       const freshUserBooks = getAllBooks();
       
+      // Debug: Log what books are being used for recommendations
+      console.log('[Recommendations] User books for recommendations:', freshUserBooks.length, 'books')
+      if (freshUserBooks.length > 0) {
+        console.log('[Recommendations] Sample books:', freshUserBooks.slice(0, 3).map(b => ({
+          title: b.title,
+          genre: b.genre,
+          rated: b.rated,
+          rating: b.rating,
+          saved: b.saved,
+          favorite: b.favorite,
+          reviewed: b.reviewed
+        })))
+      }
+      console.log('[Recommendations] Available books for matching:', allBooks.length)
+      
       const newBatch = generateTieredRecommendations(freshUserBooks, allBooks, batchSize);
+      
+      console.log('[Recommendations] Generated recommendations:', newBatch.length)
 
       // Update state immediately
       setRecommendations(newBatch);

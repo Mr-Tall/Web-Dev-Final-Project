@@ -14,11 +14,12 @@ export function calculateSimilarity(userBooks, candidateBook) {
   const authorMatches = new Set();
 
   userBooks.forEach(userBook => {
-    // Consider saved, favorited, rated books (rating > 3), or reviewed books (but only if rating >= 3)
-    const hasGoodRating = userBook.rated && userBook.rating > 3;
-    // Only consider reviewed books if they have no rating or rating >= 3
-    const hasReview = userBook.reviewed && userBook.review && (!userBook.rated || userBook.rating >= 3);
-    const relevant = userBook.saved || userBook.favorite || hasGoodRating || hasReview;
+    // Consider saved, favorited, rated books (any rating > 0), or reviewed books
+    // Include all rated books - lower ratings will have lower weight multipliers
+    const hasRating = userBook.rated && userBook.rating && userBook.rating > 0;
+    // Consider reviewed books (if they have no rating or any rating)
+    const hasReview = userBook.reviewed && userBook.review && userBook.review.trim().length > 0;
+    const relevant = userBook.saved || userBook.favorite || hasRating || hasReview;
     if (!relevant) return;
 
     // Calculate base weight multiplier based on user engagement
@@ -27,10 +28,10 @@ export function calculateSimilarity(userBooks, candidateBook) {
     if (hasReview) {
       // Books with reviews get 2x weight (stronger signal)
       weightMultiplier = 2.0;
-    } else if (userBook.rated && userBook.rating) {
-      // Use actual rating value to weight (normalized to 0.5-2.5 range)
-      // Rating 3 = 0.5x, Rating 4 = 1.5x, Rating 5 = 2.5x
-      weightMultiplier = Math.max(0.5, (userBook.rating - 2.5));
+    } else if (hasRating && userBook.rating) {
+      // Use actual rating value to weight (normalized to 0.3-2.5 range)
+      // Rating 1 = 0.3x, Rating 2 = 0.8x, Rating 3 = 1.3x, Rating 4 = 1.8x, Rating 5 = 2.5x
+      weightMultiplier = Math.max(0.3, (userBook.rating - 2.0) * 0.5 + 1.0);
     } else if (userBook.favorite) {
       // Favorites get 1.5x weight
       weightMultiplier = 1.5;
@@ -40,30 +41,36 @@ export function calculateSimilarity(userBooks, candidateBook) {
     }
 
     // Same genre - give higher weight (2 points base) since this is the primary focus
-    if (candidateBook.genre && userBook.genre && candidateBook.genre === userBook.genre) {
+    // Use case-insensitive comparison since genres might be stored in different cases
+    const userGenre = userBook.genre ? userBook.genre.toLowerCase().trim() : null;
+    const candidateGenre = candidateBook.genre ? candidateBook.genre.toLowerCase().trim() : null;
+    if (userGenre && candidateGenre && userGenre === candidateGenre) {
       const genreScore = 2 * weightMultiplier;
       score += genreScore;
-      if (!genreMatches.has(candidateBook.genre)) {
-        genreMatches.add(candidateBook.genre);
+      if (!genreMatches.has(candidateGenre)) {
+        genreMatches.add(candidateGenre);
         const reviewNote = hasReview ? ' (reviewed)' : '';
         reasons.push({
           type: 'genre',
-          value: candidateBook.genre,
+          value: candidateBook.genre, // Use original case for display
           message: `Similar to your ${candidateBook.genre} books${reviewNote}`
         });
       }
     }
 
     // Same author - secondary factor (1 point base)
-    if (candidateBook.author && userBook.author && candidateBook.author === userBook.author) {
+    // Use case-insensitive comparison for author names
+    const userAuthor = userBook.author ? userBook.author.toLowerCase().trim() : null;
+    const candidateAuthor = candidateBook.author ? candidateBook.author.toLowerCase().trim() : null;
+    if (userAuthor && candidateAuthor && userAuthor === candidateAuthor) {
       const authorScore = 1 * weightMultiplier;
       score += authorScore;
-      if (!authorMatches.has(candidateBook.author)) {
-        authorMatches.add(candidateBook.author);
+      if (!authorMatches.has(candidateAuthor)) {
+        authorMatches.add(candidateAuthor);
         const reviewNote = hasReview ? ' (reviewed)' : '';
         reasons.push({
           type: 'author',
-          value: candidateBook.author,
+          value: candidateBook.author, // Use original case for display
           message: `Same author as "${userBook.title}"${reviewNote}`
         });
       }
@@ -95,14 +102,24 @@ export function calculateSimilarity(userBooks, candidateBook) {
  * Generate a batch of recommendations using tiered shuffling
  */
 export function generateTieredRecommendations(userBooks, allBooks, batchSize = 300) {
-  if (!allBooks || allBooks.length === 0) return [];
+  if (!allBooks || allBooks.length === 0) {
+    console.log('[RecommendationEngine] No books available for recommendations')
+    return [];
+  }
   
   // If user has no relevant books (saved, favorited, or rated), return no recommendations
-  if (!userBooks || userBooks.length === 0) return [];
+  if (!userBooks || userBooks.length === 0) {
+    console.log('[RecommendationEngine] No user books provided')
+    return [];
+  }
+
+  console.log('[RecommendationEngine] Processing', userBooks.length, 'user books against', allBooks.length, 'candidate books')
 
   // Exclude already interacted books
   const interactedISBNs = new Set(userBooks.map(b => b.isbn));
   const candidates = allBooks.filter(b => !interactedISBNs.has(b.isbn));
+  
+  console.log('[RecommendationEngine]', candidates.length, 'candidate books after excluding', userBooks.length, 'interacted books')
 
   // Compute similarity with reasons
   const scored = candidates.map(book => {
@@ -117,8 +134,14 @@ export function generateTieredRecommendations(userBooks, allBooks, batchSize = 3
   // Filter out books with score 0 (no matches) - these shouldn't be recommended
   const relevantBooks = scored.filter(book => book.score > 0);
   
+  console.log('[RecommendationEngine]', relevantBooks.length, 'books with similarity score > 0')
+  
   // If no books have any similarity, return empty array
-  if (relevantBooks.length === 0) return [];
+  if (relevantBooks.length === 0) {
+    console.log('[RecommendationEngine] No books found with matching genres/authors. User book genres:', 
+      [...new Set(userBooks.map(b => b.genre).filter(Boolean))])
+    return [];
+  }
 
   // Sort by score descending
   relevantBooks.sort((a, b) => b.score - a.score);
