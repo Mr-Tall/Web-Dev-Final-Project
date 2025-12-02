@@ -26,8 +26,9 @@ export function RecommendationBooksProvider({ children }) {
     
     async function loadBooks() {
       try {
-        // Fetch with a larger limit for recommendations
-        const fetched = await fetchBooksCatalog(1000) // or whatever limit you want
+        // Fetch 100 books for recommendations (sufficient for good recommendations)
+        // Skip description enhancement to speed up loading
+        const fetched = await fetchBooksCatalog(100, { skipDescriptionEnhancement: true })
         if (active && fetched && fetched.length > 0) {
           console.log('Number of recommendation books fetched:', fetched.length)
           setBooks(fetched)
